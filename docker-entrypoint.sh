@@ -33,6 +33,12 @@ fi
 if [ -n "$APP_BASE_URL" ]; then
     sed -i "s|^app.baseURL = .*|app.baseURL = '$APP_BASE_URL'|" /var/www/html/.env
 fi
+if [ -n "$ADMIN_SERVER_URL" ]; then
+    sed -i "s|^ADMIN_SERVER_URL = .*|ADMIN_SERVER_URL = '$ADMIN_SERVER_URL'|" /var/www/html/.env
+fi
+if [ -n "$PHISH_SERVER_URL" ]; then
+    sed -i "s|^PHISH_SERVER_URL = .*|PHISH_SERVER_URL = '$PHISH_SERVER_URL'|" /var/www/html/.env
+fi
 
 exec "$@"
 

@@ -17,6 +17,8 @@ services:
       - DB_USER=${DB_USER:-phish_user}
       - DB_PASS=${DB_PASS:-YourStrongRdsPassword}
       - APP_BASE_URL=${APP_BASE_URL:-http://admin.yourcompany.com/}
+      - ADMIN_SERVER_URL=${ADMIN_SERVER_URL:-http://admin.yourcompany.com}
+      - PHISH_SERVER_URL=${PHISH_SERVER_URL:-http://rewards.yourcompany.com}
       - CI_ENVIRONMENT=production
     volumes:
       # Persistent volume for logs, session data, cache, and uploaded attachments
