@@ -1,0 +1,14 @@
+.git
+.github
+tests
+scratch
+writable/cache/*
+writable/logs/*
+writable/session/*
+writable/debugbar/*
+.env
+.idea
+.vscode
+*.log
+docker-compose.override.yml
+

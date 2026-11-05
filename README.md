@@ -1,60 +1,158 @@
-# CodeIgniter 4 Framework
+# 🛡️ PhishGuard - Enterprise Phishing Simulation & Awareness Platform
 
-## What is CodeIgniter?
+**PhishGuard** is a full-featured, open-source phishing simulation and employee cybersecurity awareness platform built on CodeIgniter 4, designed for IT Security teams, CISOs, and ethical penetration testers. Inspired by platforms like **Gophish** and **KnowBe4**, PhishGuard enables organizations to run targeted phishing campaigns, track recipient interactions in real time, and deliver immediate educational debriefs to train employees against modern social engineering attacks.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+---
 
-This repository holds the distributable version of the framework.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+## 🌟 Key Features
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+* **🌐 Dual-Domain & Subdomain Architecture (Gophish Style)**
+  * **Admin Domain** (e.g. `admin.company.com`): Restricted exclusively to security staff for managing campaigns, viewing analytics, and editing templates.
+  * **Phishing Domain** (e.g. `rewards.company.com`): Decoy public domain embedded in emails, tracking pixels, and landing pages.
+  * **Strict Domain Cloaking**: Any employee or security scanner attempting to visit `/`, `/login`, or `/admin` on the phishing domain receives an authentic **HTTP 404 Not Found** decoy error, completely concealing the admin portal.
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+* **🎯 Multi-Campaign Management & Funnels**
+  * Run simultaneous, independent phishing assessments without statistical cross-contamination.
+  * Real-time funnel tracking: **Sent ➔ Opened ➔ Clicked ➔ Submitted Data ➔ Reported to Security**.
+  * Dynamic timeline activity stream logging every event with IP address, timestamp, and user-agent.
 
-## Important Change with index.php
+* **📋 Realistic Microsoft Forms Simulation & 5-Second Hacked Alert**
+  * High-fidelity simulation landing page styled after **Microsoft Forms** requesting employee details.
+  * **5.5-Second Red Alert Scare**: Upon form submission, users experience a blinking crimson alert displaying their submitted credentials in a telemetry terminal.
+  * Smooth automatic transition to an educational **"THIS WAS A PHISHING TEST"** debrief explaining red flags and security takeaways.
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+* **👁️ Captured Form Data Telemetry**
+  * Admins can inspect the exact data entered by targets (Full Name, Email, Employee ID, Employment Status, IP, Timestamp) directly in the Admin Dashboard, Targets table, and CSV exports.
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+* **🛡️ "Report Phishing" Vigilance Button**
+  * Optional toggleable footer link in simulation emails: *"Suspicious email? Report this email to IT Security 🛡️"*.
+  * Accurately tracks employee reporting rates as a positive security awareness metric. Disabled by default to preserve attack realism.
 
-**Please** read the user guide for a better explanation of how CI4 works!
+* **📥 Gophish-Compatible Target Management**
+  * Import employee directories via standard Gophish CSV format (`First Name, Last Name, Email, Position`).
+  * Persistent user directory allowing selective multi-user enrollment across campaigns with search filters.
 
-## Repository Management
+* **⚡ Dual Email Dispatch Engine**
+  * Direct SMTP support (Gmail TLS/SSL, Office 365, internal postfix relays).
+  * Native **Brevo (Sendinblue) REST API v3** integration for high-deliverability enterprise dispatch.
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+* **🐳 Production Docker Ready**
+  * Pre-configured container running **Nginx**, **PHP 8.2-FPM**, and **Supervisord** on lightweight Alpine Linux.
+  * Built for single-command deployment on **AWS EC2** connecting to **AWS RDS MySQL**.
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+---
 
-## Contributing
+## 🏗️ Architecture
 
-We welcome contributions from the community.
+```mermaid
+graph TD
+    subgraph Targets["Target Employees & Scanners"]
+        A[Target Clicks Email Link] -->|Phishing Subdomain e.g. rewards.company.com| B[Simulation Routes]
+        B --> C["/download -> /training Microsoft Forms Simulation"]
+        C --> D["5-Second Hacked Alert & Phishing Debrief"]
+        E[User or Scanner attempts /login or /admin on Decoy] -->|DomainCloakFilter| F["404 Not Found (Stealth Decoy)"]
+    end
 
-Please read the [*Contributing to CodeIgniter*](https://github.com/codeigniter4/CodeIgniter4/blob/develop/CONTRIBUTING.md) section in the development repository.
+    subgraph SecurityAdmins["IT Security Team"]
+        G[Admin Access] -->|Admin Subdomain e.g. admin.company.com| H["/login & /admin Dashboard"]
+        H --> I["Campaigns, Templates, User Directory & Captured Data"]
+    end
+```
 
-## Server Requirements
+---
 
-PHP version 8.1 or higher is required, with the following extensions installed:
+## 🚀 Quick Start (Docker Deployment)
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+The fastest way to deploy PhishGuard in production or locally:
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
+### 1. Clone & Configure Environment
+```bash
+git clone <repository-url> phishguard
+cd phishguard
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+# Copy environment configuration
+cp .env.example .env
+nano .env
+```
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+Set your database credentials and domain URLs in `.env`:
+```ini
+CI_ENVIRONMENT = production
+app.baseURL = 'http://admin.yourcompany.com/'
+
+# Database (Local MySQL or AWS RDS)
+database.default.hostname = phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com
+database.default.database = phishing_simulation
+database.default.username = admin
+database.default.password = YourStrongPassword
+
+# Domain Configuration
+PHISH_SERVER_URL = 'http://rewards.yourcompany.com'
+ADMIN_SERVER_URL = 'http://admin.yourcompany.com'
+```
+
+### 2. Import Database Schema
+```bash
+mysql -h <DB_HOST> -u <DB_USER> -p <DB_NAME> < database.sql
+```
+
+### 3. Launch Docker Container
+```bash
+docker compose up -d --build
+```
+The application is now running with Nginx and PHP 8.2-FPM on ports 80 and 443!
+
+---
+
+## 💻 Local Development (XAMPP / PHP CLI)
+
+1. Clone or extract the repository to your local web root (e.g. `c:\xampp\htdocs\phishing-simulation`).
+2. Start **Apache** and **MySQL** in XAMPP.
+3. Import `database.sql` into MySQL using phpMyAdmin or command line:
+   ```bash
+   mysql -u root -p phishing_simulation < database.sql
+   ```
+4. Copy `.env.example` to `.env` and verify database settings.
+5. Open your browser:
+   * **Admin Login**: `http://localhost/phishing-simulation/login`
+   * **Default Admin**: Username: `admin` | Password: `password123`
+
+---
+
+## 📖 Deployment Documentation
+
+For comprehensive step-by-step instructions on deploying to **AWS EC2**, **AWS RDS**, configuring **Nginx dual subdomains**, and setting up free **Let's Encrypt SSL certificates**, refer to:
+
+👉 [**DEPLOYMENT.md**](DEPLOYMENT.md)
+
+---
+
+## 📁 Project Directory Structure
+
+```text
+phishing-simulation/
+├── app/
+│   ├── Config/              # App, Database, Filters, Routes configurations
+│   ├── Controllers/         # Admin, Auth, Phish, Quiz controllers
+│   ├── Filters/             # DomainCloakFilter (strict domain isolation)
+│   ├── Models/              # Campaign, Target, Template, Log models
+│   └── Views/               # Admin Dashboard, Campaigns, Templates, Training pages
+├── assets/                  # CSS stylesheets (admin.css) and UI resources
+├── docker/                  # Docker container Nginx and Supervisord configs
+├── writable/                # Application logs, sessions, cache, uploads
+├── database.sql             # Complete database schema and default templates
+├── Dockerfile               # Production Alpine Nginx + PHP 8.2-FPM container
+├── docker-compose.yml       # Docker Compose service definition
+├── DEPLOYMENT.md            # AWS EC2 & RDS deployment guide
+├── nginx.conf               # Standalone dual-subdomain Nginx configuration
+└── .env.example             # Environment configuration template
+```
+
+---
+
+## 🔒 Security & Ethical Use Notice
+
+> [!IMPORTANT]
+> **PhishGuard is designed exclusively for authorized corporate security awareness training, internal risk assessments, and educational simulations.**
+> 
+> Unauthorized phishing, credential harvesting without explicit employee consent, or deployment against third parties is strictly prohibited and illegal under computer security and privacy laws (e.g. CFAA, GDPR, Information Technology Act). Always ensure proper authorization from organizational leadership before dispatching simulations.

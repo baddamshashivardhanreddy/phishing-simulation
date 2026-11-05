@@ -1,237 +1,223 @@
-# 🚀 PhishGuard - Complete Production Server Deployment Guide
+# 🚀 PhishGuard - AWS EC2 & RDS Production Deployment Guide
 
-This guide walks you through deploying **PhishGuard** on an Ubuntu/Debian Linux server with **Nginx**, **PHP 8.2-FPM**, and **MySQL**, utilizing a dual-subdomain architecture for complete separation between the **Admin Console** and the **Target Phishing Link**.
+This guide walks you through deploying **PhishGuard** in production on **Amazon Web Services (AWS)** using **AWS EC2 (Docker)** and **AWS RDS (MySQL)**, utilizing an isolated dual-subdomain architecture.
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ AWS Cloud Architecture
 
 ```mermaid
 graph TD
-    subgraph PublicInternet["Public Internet / Employees"]
-        TargetUser[Target Recipient] -->|Clicks Email Link| PhishSubdomain["https://rewards.yourcompany.com"]
-        PhishSubdomain --> PhishRoutes["/download/*, /training, /image/*, /report/*"]
-        CuriousUser[Target or External Scanner] -->|Visits /login, /admin, or /| PhishSubdomain
-        PhishSubdomain --> Decoy404["Stealth 404 Not Found (Authentic Decoy)"]
+    subgraph Internet["Public Internet & Employees"]
+        TargetUser[Target Employee] -->|Clicks Email Link| PhishDomain["rewards.yourcompany.com"]
+        CuriousUser[Target or External Scanner] -->|Visits /login, /admin, or /| PhishDomain
+        AdminUser[SecOps Admin] -->|Direct Access| AdminDomain["admin.yourcompany.com"]
     end
 
-    subgraph InternalAdmin["IT Security Staff"]
-        AdminUser[SecOps Admin] -->|Direct Access| AdminSubdomain["https://admin.yourcompany.com"]
-        AdminSubdomain --> AdminPortal["/login & /admin Dashboard"]
+    subgraph AWS["AWS Cloud VPC"]
+        subgraph EC2["EC2 Instance (t4g.small)"]
+            Docker["Docker Container (Nginx + PHP 8.2-FPM)"]
+            PhishDomain -->|Port 80/443| Docker
+            AdminDomain -->|Port 80/443| Docker
+            Docker --> Decoy404["Stealth 404 Not Found (Cloaked)"]
+            Docker --> AdminPortal["Admin Dashboard & Login"]
+            Docker --> PhishFlow["/download, /training, Form & Debrief"]
+        end
+
+        subgraph RDS["AWS RDS (MySQL 8.0)"]
+            Docker -->|Port 3306 (VPC Internal)| Database[(phishing_simulation DB)]
+        end
     end
 ```
 
 ---
 
-## 📋 Server Requirements
+## 📋 Recommended AWS Sizing
 
-- **Operating System**: Ubuntu 22.04 LTS / 24.04 LTS or Debian 12
-- **Web Server**: Nginx
-- **PHP Version**: PHP 8.1 or PHP 8.2 (with FPM)
-- **Database**: MySQL 8.0+ or MariaDB 10.6+
-- **Required PHP Extensions**: `php-fpm`, `php-mysql`, `php-curl`, `php-mbstring`, `php-xml`, `php-intl`, `php-zip`
-
----
-
-## Step 1: DNS Setup
-
-Before starting on the server, configure two DNS `A` records in your domain registrar / Cloudflare pointing to your server's public IP:
-
-| Type | Host / Name | Value / Destination | Purpose |
+| Component | AWS Resource | Recommended Size | Notes |
 |---|---|---|---|
-| `A` | `admin` (e.g. `admin.yourcompany.com`) | `YOUR_SERVER_PUBLIC_IP` | Restricted Admin Portal |
-| `A` | `rewards` (e.g. `rewards.yourcompany.com`) | `YOUR_SERVER_PUBLIC_IP` | Decoy Phishing Link for Users |
+| **Web & App Server** | **AWS EC2** | **`t4g.small`** (ARM Graviton2) or `t3.small` | 2 vCPU / 2 GB RAM. Fast, handles blast click surges. |
+| **Database** | **AWS RDS (MySQL)** | **`db.t4g.micro`** or `db.t3.micro` | Eligible for AWS Free Tier. 20 GB gp3 storage. |
+| **OS** | **Amazon Linux 2023** or **Ubuntu 22.04 LTS** | 64-bit ARM or x86 | Minimal, secure, optimized for Docker. |
 
 ---
 
-## Step 2: Install Required Packages
+## 🛡️ Step 1: AWS Security Groups Setup
 
-SSH into your server and install Nginx, PHP, MySQL, and Certbot:
+Before launching, configure two Security Groups in your AWS VPC:
 
+### 1. EC2 Security Group (`sg-phishguard-ec2`)
+* **Inbound Rules**:
+  * `HTTP` (Port 80) from `0.0.0.0/0`
+  * `HTTPS` (Port 443) from `0.0.0.0/0`
+  * `SSH` (Port 22) restricted to **Your Office/VPN IP only**
+
+### 2. RDS Security Group (`sg-phishguard-rds`)
+* **Inbound Rules**:
+  * `MYSQL/Aurora` (Port 3306) restricted to **Source: `sg-phishguard-ec2`** *(Never open to `0.0.0.0/0`)*
+
+---
+
+## 🗄️ Step 2: AWS RDS Database Setup & Schema Import
+
+1. Create a MySQL 8.0 instance in AWS RDS.
+2. Note your **RDS Endpoint** (e.g. `phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com`).
+3. Connect from your EC2 instance (or local machine with temporary access) and import the schema:
+
+```bash
+# Connect to RDS and create the database
+mysql -h phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com -u admin -p -e "CREATE DATABASE phishing_simulation CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# Import the initial schema and templates
+mysql -h phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com -u admin -p phishing_simulation < database.sql
+```
+
+---
+
+## 🌐 Step 3: Configure DNS Records
+
+In your DNS provider (Cloudflare, AWS Route 53, or Domain Registrar), create two `A` records pointing to your **EC2 Public Elastic IP**:
+
+| Record Type | Host / Name | Target | Purpose |
+|---|---|---|---|
+| `A` | `admin` (e.g. `admin.yourcompany.com`) | `EC2_PUBLIC_IP` | Restricted Admin Portal |
+| `A` | `rewards` (e.g. `rewards.yourcompany.com`) | `EC2_PUBLIC_IP` | Decoy Phishing Link sent to users |
+
+---
+
+## 🐳 Step 4: Docker Deployment on EC2 (Recommended)
+
+### 1. SSH into your EC2 Instance and Install Docker
+**For Amazon Linux 2023:**
+```bash
+sudo dnf update -y
+sudo dnf install -y docker git
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+
+# Install Docker Compose Plugin
+DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+mkdir -p $DOCKER_CONFIG/cli-plugins
+curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o $DOCKER_CONFIG/cli-plugins/docker-compose
+chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+# Re-login to apply group permissions
+newgrp docker
+```
+
+**For Ubuntu 22.04 / 24.04:**
 ```bash
 sudo apt update && sudo apt upgrade -y
-
-# Install Nginx, MySQL, and Certbot
-sudo apt install -y nginx mysql-server certbot python3-certbot-nginx git unzip
-
-# Install PHP 8.2 and required modules
-sudo apt install -y php8.2 php8.2-fpm php8.2-mysql php8.2-curl php8.2-mbstring php8.2-xml php8.2-intl php8.2-zip
-```
-
-Verify services are running:
-```bash
-sudo systemctl status nginx
-sudo systemctl status php8.2-fpm
-sudo systemctl status mysql
+sudo apt install -y docker.io docker-compose-v2 git
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+newgrp docker
 ```
 
 ---
 
-## Step 3: Configure MySQL Database
-
-1. Open the MySQL console:
+### 2. Clone Repository & Setup Environment
 ```bash
-sudo mysql
-```
+git clone <your-repo-url> /opt/phishguard
+cd /opt/phishguard
 
-2. Create the database and dedicated user:
-```sql
-CREATE DATABASE phishing_simulation CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-CREATE USER 'phish_user'@'localhost' IDENTIFIED BY 'StrongSecretPassword123!';
-GRANT ALL PRIVILEGES ON phishing_simulation.* TO 'phish_user'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
-```
-
----
-
-## Step 4: Deploy Project Code
-
-1. Create the web root directory:
-```bash
-sudo mkdir -p /var/www/phishing-simulation
-```
-
-2. Copy or upload your project files to `/var/www/phishing-simulation`:
-```bash
-# Example if cloning via Git:
-# sudo git clone <your-repo-url> /var/www/phishing-simulation
-```
-
-3. Import the database schema and default templates:
-```bash
-cd /var/www/phishing-simulation
-sudo mysql -u phish_user -p phishing_simulation < database.sql
-```
-*(Enter `StrongSecretPassword123!` when prompted)*
-
-4. Set proper permissions for the web server (`www-data`):
-```bash
-sudo chown -R www-data:www-data /var/www/phishing-simulation
-sudo chmod -R 755 /var/www/phishing-simulation
-
-# Grant write access to cache, logs, sessions, and uploads
-sudo chmod -R 775 /var/www/phishing-simulation/writable
-```
-
----
-
-## Step 5: Configure Application Environment (`.env`)
-
-1. Copy `.env.example` to `.env`:
-```bash
-cd /var/www/phishing-simulation
+# Copy environment template
 cp .env.example .env
-```
-
-2. Edit `.env` with your editor:
-```bash
 nano .env
 ```
 
-3. Update the following lines:
+Set your production parameters in `.env`:
 ```ini
 CI_ENVIRONMENT = production
-
 app.baseURL = 'http://admin.yourcompany.com/'
 
-database.default.hostname = localhost
+# AWS RDS Configuration
+database.default.hostname = phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com
 database.default.database = phishing_simulation
-database.default.username = phish_user
-database.default.password = StrongSecretPassword123!
-database.default.DBDriver = MySQLi
+database.default.username = admin
+database.default.password = YourStrongRdsPassword
 database.default.port = 3306
 
-logger.threshold = 4
-```
-
-Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`).
-
----
-
-## Step 6: Configure Nginx for Dual Subdomains
-
-1. Copy the included `nginx.conf` to Nginx's configuration directory:
-```bash
-sudo cp /var/www/phishing-simulation/nginx.conf /etc/nginx/sites-available/phishguard.conf
-```
-
-2. Edit the configuration file to put your actual domain names:
-```bash
-sudo nano /etc/nginx/sites-available/phishguard.conf
-```
-*Replace `admin.yourcompany.com` and `rewards.yourcompany.com` with your real subdomains.*
-
-3. Enable the site and disable the default site:
-```bash
-sudo ln -s /etc/nginx/sites-available/phishguard.conf /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-```
-
-4. Test Nginx syntax and reload:
-```bash
-sudo nginx -t
-sudo systemctl reload nginx
+# Phishing and Admin Domains
+PHISH_SERVER_URL = 'http://rewards.yourcompany.com'
+ADMIN_SERVER_URL = 'http://admin.yourcompany.com'
 ```
 
 ---
 
-## Step 7: Enable Free HTTPS (SSL) with Let's Encrypt
-
-Run Certbot to automatically configure SSL certificates for both subdomains:
-
+### 3. Build & Run the Container
 ```bash
-sudo certbot --nginx -d admin.yourcompany.com -d rewards.yourcompany.com
+docker compose up -d --build
 ```
 
-Select automatic redirect to HTTPS when prompted. Certbot will automatically update the Nginx configuration with TLS certs and set up automatic renewal cron jobs.
+Check container status and logs:
+```bash
+docker compose ps
+docker compose logs -f
+```
 
 ---
 
-## Step 8: Initial Login & Setup
+## 🔒 Step 5: HTTPS / SSL Setup (Free Let's Encrypt or AWS ALB)
 
-1. Open your browser and navigate to your admin portal:
-   `https://admin.yourcompany.com/login`
+### Option A: AWS Application Load Balancer (ALB) - Easiest & Best for AWS
+1. In AWS EC2 Console, create an **Application Load Balancer**.
+2. Request a free SSL certificate in **AWS Certificate Manager (ACM)** for `admin.yourcompany.com` and `rewards.yourcompany.com`.
+3. Configure ALB listener:
+   - HTTPS:443 -> Forward to EC2 instance on Port 80.
+   - HTTP:80 -> Redirect to HTTPS:443.
 
-2. Log in using default administrator credentials:
+### Option B: Let's Encrypt Certbot via Host Reverse Proxy
+Install Certbot on the host:
+```bash
+sudo certbot certonly --standalone -d admin.yourcompany.com -d rewards.yourcompany.com
+```
+
+---
+
+## 🔑 Step 6: Initial Login & Setup
+
+1. Open your browser and navigate to:
+   `http://admin.yourcompany.com/login` (or `https://...`)
+
+2. Default administrator credentials:
    - **Username**: `admin`
-   - **Password**: `password123` *(Be sure to change this immediately in **Admin Users**)*
+   - **Password**: `password123` *(Change immediately in **Admin Users**)*
 
-3. Go to **Settings** (`https://admin.yourcompany.com/admin/settings`):
-   - **SMTP / Brevo Settings**: Enter your Gmail App Password or Brevo API Key to enable email delivery.
-   - **Sender Display Name**: `Ravindranath Yarlagadda`
-   - **Sender Email**: Your corporate or campaign sending address.
+3. Navigate to **Settings**:
+   - Verify **Admin Server URL** and **Phishing Server URL**.
+   - Configure your **SMTP / Brevo API Key** to enable live email delivery.
+   - Set **Sender Display Name** (`Ravindranath Yarlagadda`) and sender email.
 
 ---
 
-## Step 9: Verification & Testing
+## ✅ Step 7: Verification & Security Testing
 
-Verify that your security boundaries are working as expected:
+Test all boundaries to ensure complete domain separation:
 
-| Test | URL | Expected Result |
+| Test Scenario | Action / URL | Expected Result |
 |---|---|---|
-| **Admin Portal** | `https://admin.yourcompany.com/login` | ✅ Displays PhishGuard Admin Login |
-| **Phish Decoy Root** | `https://rewards.yourcompany.com/` | 🛡️ Returns **404 Not Found** (Stealth Decoy) |
-| **Phish Decoy Admin** | `https://rewards.yourcompany.com/admin` | 🛡️ Returns **404 Not Found** (Cloaked) |
-| **Phish Decoy Login** | `https://rewards.yourcompany.com/login` | 🛡️ Returns **404 Not Found** (Cloaked) |
-| **Simulation Endpoint**| `https://rewards.yourcompany.com/training` | ✅ Displays Microsoft Forms awareness simulation |
+| **Admin Portal** | Open `https://admin.yourcompany.com/login` | ✅ Displays PhishGuard Admin Login |
+| **Phishing Decoy Root** | Open `https://rewards.yourcompany.com/` | 🛡️ Returns **404 Not Found** (Authentic Apache Decoy) |
+| **Phishing Decoy Admin** | Open `https://rewards.yourcompany.com/admin` | 🛡️ Returns **404 Not Found** (Strictly Cloaked) |
+| **Phishing Decoy Login** | Open `https://rewards.yourcompany.com/login` | 🛡️ Returns **404 Not Found** (Strictly Cloaked) |
+| **Simulation Endpoint** | Open `https://rewards.yourcompany.com/training` | ✅ Displays Microsoft Forms awareness simulation |
 
 ---
 
-## 🔒 Optional Extra Security Hardening
+## 🛠️ Docker Maintenance Commands
 
-To restrict the Admin Portal so that **only your office IP address or corporate VPN** can access it, uncomment the IP restriction block in `/etc/nginx/sites-available/phishguard.conf`:
-
-```nginx
-# Under server_name admin.yourcompany.com;
-allow 203.0.113.50; # Your office static public IP
-allow 10.8.0.0/24;  # Your VPN subnet
-deny all;
-```
-Reload Nginx:
 ```bash
-sudo systemctl reload nginx
-```
-Even if someone discovers the admin subdomain, they will be blocked at the network perimeter.
+# Restart container
+docker compose restart
 
+# View live application & access logs
+docker compose logs -f phishguard
+
+# Update application code
+git pull
+docker compose up -d --build
+
+# Run database migrations or spark commands inside container
+docker compose exec phishguard php spark
+```

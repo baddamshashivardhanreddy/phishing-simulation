@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  phishguard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: phishguard
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # AWS RDS MySQL Configuration (can also be read from .env)
+      - DB_HOST=${DB_HOST:-localhost}
+      - DB_DATABASE=${DB_DATABASE:-phishing_simulation}
+      - DB_USER=${DB_USER:-phish_user}
+      - DB_PASS=${DB_PASS:-YourStrongRdsPassword}
+      - APP_BASE_URL=${APP_BASE_URL:-http://admin.yourcompany.com/}
+      - CI_ENVIRONMENT=production
+    volumes:
+      # Persistent volume for logs, session data, cache, and uploaded attachments
+      - phishguard_data:/var/www/html/writable
+      # Optional: Mount your host .env file directly
+      - ./.env:/var/www/html/.env
+    networks:
+      - phishguard_network
+
+volumes:
+  phishguard_data:
+    driver: local
+
+networks:
+  phishguard_network:
+    driver: bridge
+
