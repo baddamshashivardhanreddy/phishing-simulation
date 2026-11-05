@@ -65,7 +65,10 @@
                         Manage separate awareness campaigns independently like Gophish. Each campaign maintains isolated tracking statistics.
                     </p>
                 </div>
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button type="button" class="btn-refresh" onclick="window.location.reload()" title="Refresh Campaigns List">
+                        <ion-icon name="sync-outline"></ion-icon> Refresh
+                    </button>
                     <button type="button" class="btn-primary" onclick="openModal('launchModal')" style="padding: 10px 20px;">
                         <ion-icon name="add-circle-outline"></ion-icon> New Campaign
                     </button>
@@ -191,7 +194,7 @@
                 <button type="button" class="modal-close-round" onclick="closeModal('launchModal')" title="Close">&times;</button>
             </div>
 
-            <form action="<?= base_url('admin/send') ?>" method="post" enctype="multipart/form-data">
+            <form action="<?= base_url('admin/send') ?>" method="post" enctype="multipart/form-data" onsubmit="onSimulationSubmit(event, this)">
                 <input type="hidden" name="campaign_type" value="new">
                 <div class="modal-body" style="padding: 1.5rem 1.75rem;">
                     
@@ -424,6 +427,15 @@
         function setRedScreenDuration(sec) {
             const input = document.getElementById('redScreenDurationInput');
             if (input) input.value = sec;
+        }
+
+        function onSimulationSubmit(event, form) {
+            const btn = form.querySelector('.btn-launch-glow');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<ion-icon name="sync-outline" style="animation: spinRefresh 0.8s linear infinite; vertical-align: middle;"></ion-icon> Dispatching Simulation...';
+                btn.style.opacity = '0.85';
+            }
         }
 
         // Segmented Campaign Type Switcher

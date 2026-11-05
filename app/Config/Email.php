@@ -53,14 +53,14 @@ class Email extends BaseConfig
     public int $SMTPPort = 587;
 
     /**
-     * SMTP Timeout (in seconds)
+     * SMTP Timeout (in seconds) - Reduced to prevent hanging and timeouts
      */
-    public int $SMTPTimeout = 30;
+    public int $SMTPTimeout = 10;
 
     /**
-     * Enable persistent SMTP connections
+     * Enable persistent SMTP connections for high-speed multi-user sending
      */
-    public bool $SMTPKeepAlive = false;
+    public bool $SMTPKeepAlive = true;
 
     /**
      * SMTP Encryption.

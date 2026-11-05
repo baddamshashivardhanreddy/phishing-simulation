@@ -802,6 +802,10 @@ class Admin extends Controller
      */
     public function send_simulation()
     {
+        // Prevent PHP execution timeout on multiple email sends (allow up to 5 minutes)
+        @set_time_limit(300);
+        @ini_set('max_execution_time', '300');
+
         $campaignType = $this->request->getPost('campaign_type') ?: 'new';
         $campaignNameInput = trim($this->request->getPost('campaign_name') ?? '');
         $campaignId = (int)$this->request->getPost('campaign_id');
@@ -946,6 +950,25 @@ class Admin extends Controller
         $successCount = 0;
         $failCount = 0;
 
+        // Initialize SMTP email service once with KeepAlive for high-speed multi-user dispatch
+        $smtpConfig = [
+            'protocol'      => 'smtp',
+            'SMTPHost'      => !empty($settings['smtp_host']) ? trim($settings['smtp_host']) : 'smtp.gmail.com',
+            'SMTPUser'      => !empty($settings['smtp_user']) ? trim($settings['smtp_user']) : 'nobitanobi0272@gmail.com',
+            'SMTPPass'      => !empty($settings['smtp_pass']) ? trim($settings['smtp_pass']) : 'bbajqzhbaclrzbux',
+            'SMTPPort'      => !empty($settings['smtp_port']) ? (int)$settings['smtp_port'] : 587,
+            'SMTPCrypto'    => !empty($settings['smtp_crypto']) ? trim($settings['smtp_crypto']) : 'tls',
+            'SMTPTimeout'   => 10,
+            'SMTPKeepAlive' => true,
+            'mailType'      => 'html',
+            'charset'       => 'UTF-8',
+            'newline'       => "\r\n",
+            'CRLF'          => "\r\n",
+            'wordWrap'      => true
+        ];
+        $emailFunc = \Config\Services::email();
+        $emailFunc->initialize($smtpConfig);
+
         foreach ($targetsToSend as $tgt) {
             $targetEmail = $tgt['email'];
 
@@ -990,7 +1013,8 @@ class Admin extends Controller
             }
 
             if (!$sentSuccessfully) {
-                $emailFunc = \Config\Services::email();
+                // Clear previous message & attachments so memory and connections are kept clean
+                $emailFunc->clear(true);
                 $emailFunc->setTo($targetEmail);
                 $emailFunc->setFrom($senderEmail, $senderName);
                 $emailFunc->setSubject($subject);
@@ -1005,6 +1029,8 @@ class Admin extends Controller
                     $sentSuccessfully = true;
                 } else {
                     log_message('error', 'SMTP Send Error for ' . $targetEmail . ': ' . $emailFunc->printDebugger(['headers']));
+                    // Re-initialize if connection dropped
+                    $emailFunc->initialize($smtpConfig);
                 }
             }
 
@@ -1195,6 +1221,8 @@ class Admin extends Controller
             'content-type: application/json'
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 8);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

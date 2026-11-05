@@ -57,7 +57,7 @@
 
         <!-- Campaign Switcher Bar -->
         <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 18px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <span style="font-size: 0.85rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
                     <ion-icon name="albums-outline" style="color: var(--primary-color); font-size: 1.1rem;"></ion-icon> Active Campaign:
                 </span>
@@ -76,9 +76,37 @@
                     <ion-icon name="list-outline"></ion-icon> All Campaigns (<?= count($campaigns) ?>)
                 </a>
             </div>
-            <div>
-                <a href="<?= base_url('admin/users') ?>" style="font-size: 0.85rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">
-                    <ion-icon name="people-outline" style="vertical-align: middle;"></ion-icon> Directory: <strong><?= (int)$masterTargetCount ?> total simulation users</strong>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <!-- Manual Refresh Button -->
+                <button type="button" class="btn-refresh" id="btnManualRefresh" onclick="triggerManualRefresh()" title="Refresh Dashboard Now">
+                    <ion-icon name="sync-outline" id="refreshSpinIcon"></ion-icon>
+                    <span id="refreshBtnLabel">Refresh</span>
+                </button>
+
+                <!-- Auto-Refresh Pill with Live Indicator & Interval Selector -->
+                <div class="auto-refresh-pill active" id="autoRefreshPill" title="Live Auto-Refresh Dashboard">
+                    <label class="auto-refresh-label">
+                        <input type="checkbox" id="autoRefreshCheckbox" onchange="toggleAutoRefresh(this.checked)" checked style="cursor: pointer;">
+                        <span class="live-dot" id="liveDot"></span>
+                        <span>Auto-Refresh:</span>
+                    </label>
+                    <select id="autoRefreshIntervalSelect" onchange="changeAutoRefreshInterval(this.value)" class="auto-refresh-select" title="Refresh Interval">
+                        <option value="5">5s</option>
+                        <option value="10" selected>10s</option>
+                        <option value="15">15s</option>
+                        <option value="30">30s</option>
+                        <option value="60">60s</option>
+                    </select>
+                    <span id="autoRefreshTimerPill" class="timer-pill" title="Next update countdown">10s</span>
+                </div>
+
+                <!-- Last Refreshed Time -->
+                <span id="lastRefreshTimestamp" style="color: #94a3b8; font-size: 0.78rem; white-space: nowrap;">
+                    Updated: <strong id="lastRefreshTimeVal" style="color: #475569;"><?= date('h:i:s A') ?></strong>
+                </span>
+
+                <a href="<?= base_url('admin/users') ?>" style="font-size: 0.82rem; color: var(--primary-color); text-decoration: none; font-weight: 500; border-left: 1px solid #e2e8f0; padding-left: 10px;">
+                    <ion-icon name="people-outline" style="vertical-align: middle;"></ion-icon> Directory: <strong><?= (int)$masterTargetCount ?></strong>
                 </a>
             </div>
         </div>
@@ -94,13 +122,16 @@
                         <span class="status-pill active"><?= esc($campaign['status'] ?? 'In progress') ?></span>
                     <?php endif; ?>
                 </h2>
-                <div class="campaign-meta">
+                <div class="campaign-meta" id="campaignMetaContainer">
                     <span><ion-icon name="calendar-outline" style="vertical-align:middle;"></ion-icon> Started: <?= !empty($campaign['created_at']) ? date('M d, Y', strtotime($campaign['created_at'])) : date('M d, Y') ?></span>
                     <span><ion-icon name="mail-outline" style="vertical-align:middle;"></ion-icon> Template: <strong><?= esc($campaign['template_name'] ?? 'Standard Security Notice') ?></strong></span>
                     <span><ion-icon name="people-outline" style="vertical-align:middle;"></ion-icon> Targets: <strong><?= count($targets) ?> enrolled</strong></span>
                 </div>
             </div>
             <div class="campaign-actions">
+                <button type="button" class="btn-refresh" onclick="triggerManualRefresh()" style="border: 1px solid #cbd5e1;" title="Refresh Campaign Data">
+                    <ion-icon name="sync-outline"></ion-icon> Refresh
+                </button>
                 <button type="button" class="btn-success" onclick="openModal('launchModal')">
                     <ion-icon name="paper-plane-outline"></ion-icon> Launch Simulation
                 </button>
@@ -122,7 +153,12 @@
         </div>
 
         <!-- Gophish Funnel Progression Bar (5 Signature Stages including Reported) -->
-        <div class="funnel-grid-5">
+        <div class="funnel-grid-5" id="funnelGridContainer"
+             data-sent="<?= (int)$stats['sent_count'] ?>"
+             data-opened="<?= (int)$stats['opened_count'] ?>"
+             data-clicked="<?= (int)$stats['clicked_count'] ?>"
+             data-submitted="<?= (int)$stats['submitted_count'] ?>"
+             data-reported="<?= (int)$stats['reported_count'] ?>">
             <!-- Stage 1: Email Sent -->
             <div class="funnel-card stage-sent">
                 <div class="funnel-header">
@@ -241,7 +277,7 @@
         </div>
 
         <!-- Gophish Campaign Results Table -->
-        <div class="table-container">
+        <div class="table-container" id="targetsSectionContainer">
             <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                 <div>
                     <h3>Campaign Results & Engagement Progression</h3>
@@ -262,12 +298,12 @@
             <!-- Toolbar & Filter Tabs -->
             <div class="table-toolbar">
                 <div class="filter-tabs">
-                    <button class="filter-tab active" onclick="filterTable('all', this)">All (<?= count($targets) ?>)</button>
-                    <button class="filter-tab" onclick="filterTable('sent', this)">Sent (<?= $stats['sent_count'] ?>)</button>
-                    <button class="filter-tab" onclick="filterTable('opened', this)">Opened (<?= $stats['opened_count'] ?>)</button>
-                    <button class="filter-tab" onclick="filterTable('clicked', this)">Clicked (<?= $stats['clicked_count'] ?>)</button>
-                    <button class="filter-tab" onclick="filterTable('submitted', this)">Submitted (<?= $stats['submitted_count'] ?>)</button>
-                    <button class="filter-tab" onclick="filterTable('reported', this)" style="color: #059669; font-weight: 700;">🛡️ Reported (<?= $stats['reported_count'] ?>)</button>
+                    <button class="filter-tab active" data-filter="all" onclick="filterTable('all', this)">All (<?= count($targets) ?>)</button>
+                    <button class="filter-tab" data-filter="sent" onclick="filterTable('sent', this)">Sent (<?= $stats['sent_count'] ?>)</button>
+                    <button class="filter-tab" data-filter="opened" onclick="filterTable('opened', this)">Opened (<?= $stats['opened_count'] ?>)</button>
+                    <button class="filter-tab" data-filter="clicked" onclick="filterTable('clicked', this)">Clicked (<?= $stats['clicked_count'] ?>)</button>
+                    <button class="filter-tab" data-filter="submitted" onclick="filterTable('submitted', this)">Submitted (<?= $stats['submitted_count'] ?>)</button>
+                    <button class="filter-tab" data-filter="reported" onclick="filterTable('reported', this)" style="color: #059669; font-weight: 700;">🛡️ Reported (<?= $stats['reported_count'] ?>)</button>
                 </div>
 
                 <div style="display: flex; gap: 10px; align-items: center;">
@@ -442,7 +478,7 @@
         </div>
 
         <!-- Live Campaign Timeline Feed (Gophish Style) -->
-        <div class="table-container" style="margin-top: 2rem;">
+        <div class="table-container" id="recentActivityContainer" style="margin-top: 2rem;">
             <div class="table-header">
                 <h3>Campaign Activity Stream</h3>
                 <small style="color: var(--text-muted)">Chronological event log of recipient interactions</small>
@@ -508,7 +544,7 @@
                 <button type="button" class="modal-close-round" onclick="closeModal('launchModal')" title="Close">&times;</button>
             </div>
 
-            <form action="<?= base_url('admin/send') ?>" method="post" enctype="multipart/form-data">
+            <form action="<?= base_url('admin/send') ?>" method="post" enctype="multipart/form-data" onsubmit="onSimulationSubmit(event, this)">
                 <input type="hidden" name="campaign_id" value="<?= esc($campaign['id']) ?>">
                 <div class="modal-body" style="padding: 1.5rem 1.75rem;">
                     
@@ -1108,8 +1144,232 @@
             box.style.display = box.style.display === 'none' ? 'block' : 'none';
         }
 
+        // ==========================================
+        // AUTO-REFRESH & LIVE DASHBOARD POLLING
+        // ==========================================
+        let autoRefreshTimer = null;
+        let autoRefreshInterval = 10;
+        let autoRefreshSecondsLeft = 10;
+        let isRefreshing = false;
+        window.campaignChartInstance = null;
+
+        function initAutoRefresh() {
+            const savedEnabled = localStorage.getItem('phishguard_auto_refresh_enabled');
+            const savedInterval = localStorage.getItem('phishguard_auto_refresh_interval');
+
+            if (savedInterval) {
+                autoRefreshInterval = parseInt(savedInterval, 10) || 10;
+                const select = document.getElementById('autoRefreshIntervalSelect');
+                if (select) select.value = autoRefreshInterval;
+            }
+
+            const isEnabled = (savedEnabled === null) ? true : (savedEnabled === 'true');
+            const checkbox = document.getElementById('autoRefreshCheckbox');
+            if (checkbox) checkbox.checked = isEnabled;
+
+            toggleAutoRefresh(isEnabled, false);
+        }
+
+        function toggleAutoRefresh(enable, save = true) {
+            const pill = document.getElementById('autoRefreshPill');
+            if (save) localStorage.setItem('phishguard_auto_refresh_enabled', enable ? 'true' : 'false');
+
+            if (enable) {
+                if (pill) pill.classList.add('active');
+                startAutoRefreshTimer();
+            } else {
+                if (pill) pill.classList.remove('active');
+                stopAutoRefreshTimer();
+                const badge = document.getElementById('autoRefreshTimerPill');
+                if (badge) badge.textContent = 'OFF';
+            }
+        }
+
+        function changeAutoRefreshInterval(sec) {
+            autoRefreshInterval = parseInt(sec, 10) || 10;
+            autoRefreshSecondsLeft = autoRefreshInterval;
+            localStorage.setItem('phishguard_auto_refresh_interval', autoRefreshInterval);
+            const badge = document.getElementById('autoRefreshTimerPill');
+            if (badge) badge.textContent = autoRefreshSecondsLeft + 's';
+        }
+
+        function startAutoRefreshTimer() {
+            stopAutoRefreshTimer();
+            autoRefreshSecondsLeft = autoRefreshInterval;
+            const badge = document.getElementById('autoRefreshTimerPill');
+            if (badge) badge.textContent = autoRefreshSecondsLeft + 's';
+
+            autoRefreshTimer = setInterval(() => {
+                // If any modal is currently open, pause countdown so user is not interrupted
+                if (document.querySelector('.modal-overlay.show')) {
+                    return;
+                }
+
+                autoRefreshSecondsLeft--;
+                if (badge) badge.textContent = autoRefreshSecondsLeft + 's';
+
+                if (autoRefreshSecondsLeft <= 0) {
+                    autoRefreshSecondsLeft = autoRefreshInterval;
+                    refreshDashboard(false);
+                }
+            }, 1000);
+        }
+
+        function stopAutoRefreshTimer() {
+            if (autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = null;
+            }
+        }
+
+        function triggerManualRefresh() {
+            refreshDashboard(true);
+        }
+
+        function refreshDashboard(isManual = false) {
+            if (isRefreshing) return;
+            isRefreshing = true;
+
+            const btn = document.getElementById('btnManualRefresh');
+            const label = document.getElementById('refreshBtnLabel');
+            if (btn) btn.classList.add('refreshing');
+            if (label && isManual) label.textContent = 'Updating...';
+
+            const currentSearch = document.getElementById('targetSearch') ? document.getElementById('targetSearch').value : '';
+            const activeTab = document.querySelector('.filter-tab.active');
+            const activeFilterType = activeTab ? activeTab.getAttribute('data-filter') : 'all';
+
+            fetch(window.location.href, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                cache: 'no-store'
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // 1. Update Funnel Grid
+                const newFunnel = doc.getElementById('funnelGridContainer');
+                const curFunnel = document.getElementById('funnelGridContainer');
+                if (newFunnel && curFunnel) {
+                    curFunnel.innerHTML = newFunnel.innerHTML;
+                    curFunnel.setAttribute('data-sent', newFunnel.getAttribute('data-sent') || 0);
+                    curFunnel.setAttribute('data-opened', newFunnel.getAttribute('data-opened') || 0);
+                    curFunnel.setAttribute('data-clicked', newFunnel.getAttribute('data-clicked') || 0);
+                    curFunnel.setAttribute('data-submitted', newFunnel.getAttribute('data-submitted') || 0);
+                    curFunnel.setAttribute('data-reported', newFunnel.getAttribute('data-reported') || 0);
+
+                    // Update Chart
+                    updateCampaignChart(
+                        parseInt(newFunnel.getAttribute('data-sent') || 0, 10),
+                        parseInt(newFunnel.getAttribute('data-opened') || 0, 10),
+                        parseInt(newFunnel.getAttribute('data-clicked') || 0, 10),
+                        parseInt(newFunnel.getAttribute('data-submitted') || 0, 10),
+                        parseInt(newFunnel.getAttribute('data-reported') || 0, 10)
+                    );
+                }
+
+                // 2. Update Campaign Meta
+                const newMeta = doc.getElementById('campaignMetaContainer');
+                const curMeta = document.getElementById('campaignMetaContainer');
+                if (newMeta && curMeta) {
+                    curMeta.innerHTML = newMeta.innerHTML;
+                }
+
+                // 3. Update Targets Table
+                const newTargets = doc.getElementById('targetsSectionContainer');
+                const curTargets = document.getElementById('targetsSectionContainer');
+                if (newTargets && curTargets) {
+                    curTargets.innerHTML = newTargets.innerHTML;
+
+                    // Re-apply filter tab
+                    if (activeFilterType && activeFilterType !== 'all') {
+                        const targetTab = curTargets.querySelector(`.filter-tab[data-filter="${activeFilterType}"]`);
+                        if (targetTab) {
+                            curTargets.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                            targetTab.classList.add('active');
+                            filterTable(activeFilterType, targetTab);
+                        }
+                    }
+                    // Re-apply search filter
+                    if (currentSearch) {
+                        const searchInput = document.getElementById('targetSearch');
+                        if (searchInput) {
+                            searchInput.value = currentSearch;
+                            searchTargets();
+                        }
+                    }
+                }
+
+                // 4. Update Activity Container
+                const newActivity = doc.getElementById('recentActivityContainer');
+                const curActivity = document.getElementById('recentActivityContainer');
+                if (newActivity && curActivity) {
+                    curActivity.innerHTML = newActivity.innerHTML;
+                }
+
+                // 5. Update timestamp
+                const timeEl = document.getElementById('lastRefreshTimeVal');
+                if (timeEl) {
+                    const now = new Date();
+                    timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                }
+
+                // Reset timer badge
+                autoRefreshSecondsLeft = autoRefreshInterval;
+                const badge = document.getElementById('autoRefreshTimerPill');
+                if (badge && document.getElementById('autoRefreshCheckbox').checked) {
+                    badge.textContent = autoRefreshSecondsLeft + 's';
+                }
+            })
+            .catch(err => {
+                console.warn('Dashboard live refresh error:', err);
+                if (isManual) {
+                    window.location.reload();
+                }
+            })
+            .finally(() => {
+                isRefreshing = false;
+                if (btn) btn.classList.remove('refreshing');
+                if (label) label.textContent = 'Refresh';
+            });
+        }
+
+        function updateCampaignChart(sent, opened, clicked, submitted, reported) {
+            if (!window.campaignChartInstance) return;
+            const hasData = (sent > 0 || opened > 0 || clicked > 0 || submitted > 0 || reported > 0);
+            window.campaignChartInstance.data.labels = hasData 
+                ? ['Sent (Unopened)', 'Opened', 'Clicked Link', 'Submitted Data', 'Reported Phish 🛡️']
+                : ['No Events Yet'];
+            window.campaignChartInstance.data.datasets[0].data = hasData ? [
+                Math.max(0, sent - opened),
+                Math.max(0, opened - clicked),
+                Math.max(0, clicked - submitted),
+                submitted,
+                reported
+            ] : [1];
+            window.campaignChartInstance.data.datasets[0].backgroundColor = hasData ? [
+                '#3b82f6', '#06b6d4', '#f97316', '#ef4444', '#10b981'
+            ] : ['#e2e8f0'];
+            window.campaignChartInstance.update();
+        }
+
+        function onSimulationSubmit(event, form) {
+            const btn = form.querySelector('.btn-launch-glow');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<ion-icon name="sync-outline" style="animation: spinRefresh 0.8s linear infinite; vertical-align: middle;"></ion-icon> Dispatching Simulation...';
+                btn.style.opacity = '0.85';
+            }
+        }
+
         // Initialize Chart.js for Gophish-style Campaign Overview
         document.addEventListener('DOMContentLoaded', function() {
+            initAutoRefresh();
+
             const ctx = document.getElementById('campaignChart').getContext('2d');
             const sent = <?= (int)$stats['sent_count'] ?>;
             const opened = <?= (int)$stats['opened_count'] ?>;
@@ -1119,7 +1379,7 @@
 
             const hasData = (sent > 0 || opened > 0 || clicked > 0 || submitted > 0 || reported > 0);
 
-            new Chart(ctx, {
+            window.campaignChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: hasData 

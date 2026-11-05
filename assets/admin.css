@@ -1162,3 +1162,103 @@ tr:hover td {
     box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
     background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
 }
+
+/* Dashboard Refresh & Auto-Refresh Styles */
+.btn-refresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-refresh:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.btn-refresh.refreshing #refreshSpinIcon {
+    animation: spinRefresh 0.8s linear infinite;
+}
+
+@keyframes spinRefresh {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.auto-refresh-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    transition: all 0.2s ease;
+}
+
+.auto-refresh-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    cursor: pointer;
+    font-weight: 600;
+    color: #475569;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+    display: inline-block;
+    transition: background 0.3s ease;
+}
+
+.auto-refresh-pill.active .live-dot {
+    background: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+    animation: livePulse 1.5s infinite;
+}
+
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.85); }
+}
+
+.auto-refresh-select {
+    border: 1px solid #cbd5e1;
+    background: white;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    padding: 2px 4px;
+    color: #334155;
+    cursor: pointer;
+}
+
+.timer-pill {
+    background: #e2e8f0;
+    color: #475569;
+    border-radius: 12px;
+    padding: 1px 7px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    min-width: 28px;
+    text-align: center;
+}
+
+.auto-refresh-pill.active .timer-pill {
+    background: #dcfce7;
+    color: #15803d;
+}
+
