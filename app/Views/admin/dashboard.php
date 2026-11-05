@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhishGuard - Campaign Dashboard</title>
+    <title>PhishCall - Campaign Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="<?= base_url('icon.svg') ?>">
     <link rel="alternate icon" href="<?= base_url('favicon.ico') ?>">
     <!-- Custom CSS -->
@@ -22,7 +22,7 @@
     <div class="sidebar">
         <div class="brand">
             <ion-icon name="shield-checkmark-outline"></ion-icon>
-            <span>PhishGuard</span>
+            <span>PhishCall</span>
         </div>
         <ul class="nav-links">
             <li><a href="<?= base_url('admin') ?>" class="active"><ion-icon name="grid-outline" style="margin-right:10px"></ion-icon> <span>Campaign Dashboard</span></a></li>
@@ -1267,8 +1267,8 @@
         window.campaignChartInstance = null;
 
         function initAutoRefresh() {
-            const savedEnabled = localStorage.getItem('phishguard_auto_refresh_enabled');
-            const savedInterval = localStorage.getItem('phishguard_auto_refresh_interval');
+            const savedEnabled = localStorage.getItem('phishcall_auto_refresh_enabled');
+            const savedInterval = localStorage.getItem('phishcall_auto_refresh_interval');
 
             if (savedInterval) {
                 autoRefreshInterval = parseInt(savedInterval, 10) || 10;
@@ -1285,7 +1285,7 @@
 
         function toggleAutoRefresh(enable, save = true) {
             const pill = document.getElementById('autoRefreshPill');
-            if (save) localStorage.setItem('phishguard_auto_refresh_enabled', enable ? 'true' : 'false');
+            if (save) localStorage.setItem('phishcall_auto_refresh_enabled', enable ? 'true' : 'false');
 
             if (enable) {
                 if (pill) pill.classList.add('active');
@@ -1301,7 +1301,7 @@
         function changeAutoRefreshInterval(sec) {
             autoRefreshInterval = parseInt(sec, 10) || 10;
             autoRefreshSecondsLeft = autoRefreshInterval;
-            localStorage.setItem('phishguard_auto_refresh_interval', autoRefreshInterval);
+            localStorage.setItem('phishcall_auto_refresh_interval', autoRefreshInterval);
             const badge = document.getElementById('autoRefreshTimerPill');
             if (badge) badge.textContent = autoRefreshSecondsLeft + 's';
         }

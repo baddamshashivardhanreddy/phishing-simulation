@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulation Landing Form Editor - PhishGuard</title>
+    <title>Simulation Landing Form Editor - PhishCall</title>
     <link rel="icon" type="image/svg+xml" href="<?= base_url('icon.svg') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/admin.css') ?>">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
@@ -173,7 +173,7 @@
     <div class="sidebar">
         <div class="brand">
             <ion-icon name="shield-checkmark-outline"></ion-icon>
-            <span>PhishGuard</span>
+            <span>PhishCall</span>
         </div>
         <ul class="nav-links">
             <li><a href="<?= base_url('admin') ?>"><ion-icon name="grid-outline" style="margin-right:10px"></ion-icon> <span>Campaign Dashboard</span></a></li>

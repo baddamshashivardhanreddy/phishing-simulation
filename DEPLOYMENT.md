@@ -1,6 +1,6 @@
-# 🚀 PhishGuard - AWS EC2 & RDS Production Deployment Guide
+# 🚀 PhishCall - AWS EC2 & RDS Production Deployment Guide
 
-This guide walks you through deploying **PhishGuard** in production on **Amazon Web Services (AWS)** using **AWS EC2 (Docker)** and **AWS RDS (MySQL)**, utilizing an isolated dual-subdomain architecture.
+This guide walks you through deploying **PhishCall** in production on **Amazon Web Services (AWS)** using **AWS EC2 (Docker)** and **AWS RDS (MySQL)**, utilizing an isolated dual-subdomain architecture.
 
 ---
 
@@ -46,30 +46,30 @@ graph TD
 
 Before launching, configure two Security Groups in your AWS VPC:
 
-### 1. EC2 Security Group (`sg-phishguard-ec2`)
+### 1. EC2 Security Group (`sg-phishcall-ec2`)
 * **Inbound Rules**:
   * `HTTP` (Port 80) from `0.0.0.0/0`
   * `HTTPS` (Port 443) from `0.0.0.0/0`
   * `SSH` (Port 22) restricted to **Your Office/VPN IP only**
 
-### 2. RDS Security Group (`sg-phishguard-rds`)
+### 2. RDS Security Group (`sg-phishcall-rds`)
 * **Inbound Rules**:
-  * `MYSQL/Aurora` (Port 3306) restricted to **Source: `sg-phishguard-ec2`** *(Never open to `0.0.0.0/0`)*
+  * `MYSQL/Aurora` (Port 3306) restricted to **Source: `sg-phishcall-ec2`** *(Never open to `0.0.0.0/0`)*
 
 ---
 
 ## 🗄️ Step 2: AWS RDS Database Setup & Schema Import
 
 1. Create a MySQL 8.0 instance in AWS RDS.
-2. Note your **RDS Endpoint** (e.g. `phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com`).
+2. Note your **RDS Endpoint** (e.g. `phishcall-db.cxxxxxxx.us-east-1.rds.amazonaws.com`).
 3. Connect from your EC2 instance (or local machine with temporary access) and import the schema:
 
 ```bash
 # Connect to RDS and create the database
-mysql -h phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com -u admin -p -e "CREATE DATABASE phishing_simulation CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -h phishcall-db.cxxxxxxx.us-east-1.rds.amazonaws.com -u admin -p -e "CREATE DATABASE phishing_simulation CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # Import the initial schema and templates
-mysql -h phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com -u admin -p phishing_simulation < database.sql
+mysql -h phishcall-db.cxxxxxxx.us-east-1.rds.amazonaws.com -u admin -p phishing_simulation < database.sql
 ```
 
 ---
@@ -118,15 +118,15 @@ newgrp docker
 
 ### 2. Clone Repository & Setup Environment
 ```bash
-git clone <your-repo-url> /opt/phishguard
-cd /opt/phishguard
+git clone <your-repo-url> /opt/phishcall
+cd /opt/phishcall
 ```
 
 Set your production parameters in `docker-compose.yml` (or `.env`):
 ```yaml
     environment:
       # AWS RDS MySQL Configuration
-      - DB_HOST=phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com
+      - DB_HOST=phishcall-db.cxxxxxxx.us-east-1.rds.amazonaws.com
       - DB_DATABASE=phishing_simulation
       - DB_USER=admin
       - DB_PASS=YourStrongRdsPassword
@@ -194,7 +194,7 @@ Test all boundaries to ensure complete domain separation:
 
 | Test Scenario | Action / URL | Expected Result |
 |---|---|---|
-| **Admin Portal** | Open `https://admin.yourcompany.com/login` | ✅ Displays PhishGuard Admin Login |
+| **Admin Portal** | Open `https://admin.yourcompany.com/login` | ✅ Displays PhishCall Admin Login |
 | **Phishing Decoy Root** | Open `https://rewards.yourcompany.com/` | 🛡️ Returns **404 Not Found** (Authentic Apache Decoy) |
 | **Phishing Decoy Admin** | Open `https://rewards.yourcompany.com/admin` | 🛡️ Returns **404 Not Found** (Strictly Cloaked) |
 | **Phishing Decoy Login** | Open `https://rewards.yourcompany.com/login` | 🛡️ Returns **404 Not Found** (Strictly Cloaked) |
@@ -209,12 +209,12 @@ Test all boundaries to ensure complete domain separation:
 docker compose restart
 
 # View live application & access logs
-docker compose logs -f phishguard
+docker compose logs -f phishcall
 
 # Update application code
 git pull
 docker compose up -d --build
 
 # Run database migrations or spark commands inside container
-docker compose exec phishguard php spark
+docker compose exec phishcall php spark
 ```

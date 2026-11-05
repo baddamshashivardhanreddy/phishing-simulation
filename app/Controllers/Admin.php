@@ -26,7 +26,7 @@ class Admin extends Controller
         if (!empty($settings['phish_server_url']) && (!isset($settings['cloak_phish_domain']) || !empty($settings['cloak_phish_domain']))) {
             $incomingHost = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
             $phishHost = strtolower(parse_url($settings['phish_server_url'], PHP_URL_HOST) ?? '');
-            $bypassKey = trim($settings['admin_bypass_key'] ?? 'phishguard-bypass');
+            $bypassKey = trim($settings['admin_bypass_key'] ?? 'phishcall-bypass');
             $hasBypass = (!empty($bypassKey) && isset($_GET['admin_key']) && $_GET['admin_key'] === $bypassKey) || session()->get('admin_bypass');
 
             if ($phishHost && $incomingHost === $phishHost && !$hasBypass) {
@@ -136,7 +136,7 @@ class Admin extends Controller
                 $db->query("ALTER TABLE `settings` ADD COLUMN `cloak_phish_domain` TINYINT(1) DEFAULT 1 AFTER `phish_server_url`");
             }
             if (!$db->fieldExists('admin_bypass_key', 'settings')) {
-                $db->query("ALTER TABLE `settings` ADD COLUMN `admin_bypass_key` VARCHAR(100) DEFAULT 'phishguard-bypass' AFTER `cloak_phish_domain`");
+                $db->query("ALTER TABLE `settings` ADD COLUMN `admin_bypass_key` VARCHAR(100) DEFAULT 'phishcall-bypass' AFTER `cloak_phish_domain`");
             }
 
             // 10. Ensure phish_server_url exists in campaigns table
@@ -1578,7 +1578,7 @@ class Admin extends Controller
         $camp = $campaignId ? $campaignModel->find($campaignId) : null;
         $campaignName = $camp ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $camp['name']) : 'all_campaigns';
 
-        $filename = 'phishguard_report_' . $campaignName . '_' . date('Y-m-d') . '.csv';
+        $filename = 'phishcall_report_' . $campaignName . '_' . date('Y-m-d') . '.csv';
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         $fp = fopen('php://output', 'w');
@@ -1703,7 +1703,7 @@ class Admin extends Controller
             'admin_server_url' => trim($this->request->getPost('admin_server_url') ?? ''),
             'phish_server_url' => trim($this->request->getPost('phish_server_url') ?? ''),
             'cloak_phish_domain' => $this->request->getPost('cloak_phish_domain') ? 1 : 0,
-            'admin_bypass_key' => trim($this->request->getPost('admin_bypass_key') ?? 'phishguard-bypass')
+            'admin_bypass_key' => trim($this->request->getPost('admin_bypass_key') ?? 'phishcall-bypass')
         ];
 
         try {
@@ -1871,7 +1871,7 @@ class Admin extends Controller
             'admin_server_url' => rtrim(base_url(), '/'),
             'phish_server_url' => '',
             'cloak_phish_domain' => 1,
-            'admin_bypass_key' => 'phishguard-bypass'
+            'admin_bypass_key' => 'phishcall-bypass'
         ];
 
         try {

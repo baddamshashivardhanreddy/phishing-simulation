@@ -23,7 +23,7 @@ class DomainCloakFilter implements FilterInterface
         $phishUrl = trim($_SERVER['PHISH_SERVER_URL'] ?? env('PHISH_SERVER_URL') ?? $settings['phish_server_url'] ?? '');
         $adminUrl = trim($_SERVER['ADMIN_SERVER_URL'] ?? env('ADMIN_SERVER_URL') ?? $settings['admin_server_url'] ?? '');
         $cloakEnabled = !isset($settings['cloak_phish_domain']) || !empty($settings['cloak_phish_domain']);
-        $bypassKey = trim($settings['admin_bypass_key'] ?? 'phishguard-bypass');
+        $bypassKey = trim($settings['admin_bypass_key'] ?? 'phishcall-bypass');
 
         // Check if explicitly flagged as phishing server by Nginx fastcgi_param IS_PHISH_SERVER 1
         $explicitPhishFlag = !empty($_SERVER['IS_PHISH_SERVER']);

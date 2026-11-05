@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
     `admin_server_url` VARCHAR(255) DEFAULT 'http://10.10.0.190/phishing-simulation',
     `phish_server_url` VARCHAR(255) DEFAULT NULL,
     `cloak_phish_domain` TINYINT(1) DEFAULT 1,
-    `admin_bypass_key` VARCHAR(100) DEFAULT 'phishguard-bypass',
+    `admin_bypass_key` VARCHAR(100) DEFAULT 'phishcall-bypass',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

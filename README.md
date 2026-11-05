@@ -1,6 +1,6 @@
-# 🛡️ PhishGuard - Enterprise Phishing Simulation & Awareness Platform
+# 🛡️ PhishCall - Enterprise Phishing Simulation & Awareness Platform
 
-**PhishGuard** is a full-featured, open-source phishing simulation and employee cybersecurity awareness platform built on CodeIgniter 4, designed for IT Security teams, CISOs, and ethical penetration testers. Inspired by platforms like **Gophish** and **KnowBe4**, PhishGuard enables organizations to run targeted phishing campaigns, track recipient interactions in real time, and deliver immediate educational debriefs to train employees against modern social engineering attacks.
+**PhishCall** is a full-featured, open-source phishing simulation and employee cybersecurity awareness platform built on CodeIgniter 4, designed for IT Security teams, CISOs, and ethical penetration testers. Inspired by platforms like **Gophish** and **KnowBe4**, PhishCall enables organizations to run targeted phishing campaigns, track recipient interactions in real time, and deliver immediate educational debriefs to train employees against modern social engineering attacks.
 
 ---
 
@@ -63,12 +63,12 @@ graph TD
 
 ## 🚀 Quick Start (Docker Deployment)
 
-The fastest way to deploy PhishGuard in production or locally:
+The fastest way to deploy PhishCall in production or locally:
 
 ### 1. Clone & Configure Environment
 ```bash
-git clone <repository-url> phishguard
-cd phishguard
+git clone <repository-url> phishcall
+cd phishcall
 
 # Copy environment configuration
 cp .env.example .env
@@ -81,7 +81,7 @@ CI_ENVIRONMENT = production
 app.baseURL = 'http://admin.yourcompany.com/'
 
 # Database (Local MySQL or AWS RDS)
-database.default.hostname = phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com
+database.default.hostname = phishcall-db.cxxxxxxx.us-east-1.rds.amazonaws.com
 database.default.database = phishing_simulation
 database.default.username = admin
 database.default.password = YourStrongPassword
@@ -154,6 +154,6 @@ phishing-simulation/
 ## 🔒 Security & Ethical Use Notice
 
 > [!IMPORTANT]
-> **PhishGuard is designed exclusively for authorized corporate security awareness training, internal risk assessments, and educational simulations.**
+> **PhishCall is designed exclusively for authorized corporate security awareness training, internal risk assessments, and educational simulations.**
 > 
 > Unauthorized phishing, credential harvesting without explicit employee consent, or deployment against third parties is strictly prohibited and illegal under computer security and privacy laws (e.g. CFAA, GDPR, Information Technology Act). Always ensure proper authorization from organizational leadership before dispatching simulations.

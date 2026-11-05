@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulation Users - PhishGuard Admin</title>
+    <title>Simulation Users - PhishCall Admin</title>
     <link rel="icon" type="image/svg+xml" href="<?= base_url('icon.svg') ?>">
     <link rel="alternate icon" href="<?= base_url('favicon.ico') ?>">
     <!-- Stylesheet -->
@@ -20,7 +20,7 @@
     <div class="sidebar">
         <div class="brand">
             <ion-icon name="shield-checkmark-outline"></ion-icon>
-            <span>PhishGuard</span>
+            <span>PhishCall</span>
         </div>
         <ul class="nav-links">
             <li><a href="<?= base_url('admin') ?>"><ion-icon name="grid-outline" style="margin-right:10px"></ion-icon> <span>Campaign Dashboard</span></a></li>

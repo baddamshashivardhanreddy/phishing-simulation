@@ -1,5 +1,5 @@
 /**
- * Modern Custom Dialogs (Alert & Confirm) for PhishGuard
+ * Modern Custom Dialogs (Alert & Confirm) for PhishCall
  * Replaces ugly browser native alert() and confirm() popups with sleek, accessible UI modals.
  */
 

@@ -17,7 +17,7 @@ class Auth extends Controller
         if (!empty($settings['phish_server_url']) && (!isset($settings['cloak_phish_domain']) || !empty($settings['cloak_phish_domain']))) {
             $incomingHost = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
             $phishHost = strtolower(parse_url($settings['phish_server_url'], PHP_URL_HOST) ?? '');
-            $bypassKey = trim($settings['admin_bypass_key'] ?? 'phishguard-bypass');
+            $bypassKey = trim($settings['admin_bypass_key'] ?? 'phishcall-bypass');
             $hasBypass = (!empty($bypassKey) && isset($_GET['admin_key']) && $_GET['admin_key'] === $bypassKey) || session()->get('admin_bypass');
 
             if ($phishHost && $incomingHost === $phishHost && !$hasBypass) {

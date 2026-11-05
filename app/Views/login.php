@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - PhishGuard</title>
+    <title>Admin Login - PhishCall</title>
     <link rel="icon" type="image/svg+xml" href="<?= base_url('icon.svg') ?>">
     <link rel="alternate icon" href="<?= base_url('favicon.ico') ?>">
     <style>
@@ -85,7 +85,7 @@
 <body>
     <div class="login-card">
         <div class="login-header">
-            <h1>PhishGuard Admin</h1>
+            <h1>PhishCall Admin</h1>
             <p style="color: #6b7280; margin-top: 0.5rem;">Please sign in to continue</p>
         </div>
 

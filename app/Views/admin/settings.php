@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - PhishGuard Admin</title>
+    <title>Settings - PhishCall Admin</title>
     <link rel="icon" type="image/svg+xml" href="<?= base_url('icon.svg') ?>">
     <link rel="alternate icon" href="<?= base_url('favicon.ico') ?>">
     <!-- Link to the custom CSS -->
@@ -20,7 +20,7 @@
     <div class="sidebar">
         <div class="brand">
             <ion-icon name="shield-checkmark-outline"></ion-icon>
-            <span>PhishGuard</span>
+            <span>PhishCall</span>
         </div>
         <ul class="nav-links">
             <li><a href="<?= base_url('admin') ?>"><ion-icon name="grid-outline" style="margin-right:10px"></ion-icon> <span>Campaign Dashboard</span></a></li>
@@ -102,7 +102,7 @@
                             <label style="display:block; margin-bottom: 4px; color: #334155; font-weight: 600; font-size: 0.82rem;">
                                 Emergency Admin Access Key
                             </label>
-                            <input type="text" name="admin_bypass_key" value="<?= esc($settings['admin_bypass_key'] ?? 'phishguard-bypass') ?>" placeholder="phishguard-bypass"
+                            <input type="text" name="admin_bypass_key" value="<?= esc($settings['admin_bypass_key'] ?? 'phishcall-bypass') ?>" placeholder="phishcall-bypass"
                                    style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-family: monospace; font-size: 0.82rem;">
                             <small style="color: #94a3b8; display: block; margin-top: 2px;">Append <code>?admin_key=...</code> if emergency access needed on phishing domain.</small>
                         </div>
