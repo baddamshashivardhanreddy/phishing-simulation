@@ -120,28 +120,25 @@ newgrp docker
 ```bash
 git clone <your-repo-url> /opt/phishguard
 cd /opt/phishguard
-
-# Copy environment template
-cp .env.example .env
-nano .env
 ```
 
-Set your production parameters in `.env`:
-```ini
-CI_ENVIRONMENT = production
-app.baseURL = 'http://admin.yourcompany.com/'
+Set your production parameters in `docker-compose.yml` (or `.env`):
+```yaml
+    environment:
+      # AWS RDS MySQL Configuration
+      - DB_HOST=phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com
+      - DB_DATABASE=phishing_simulation
+      - DB_USER=admin
+      - DB_PASS=YourStrongRdsPassword
+      - DB_PORT=3306
 
-# AWS RDS Configuration
-database.default.hostname = phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com
-database.default.database = phishing_simulation
-database.default.username = admin
-database.default.password = YourStrongRdsPassword
-database.default.port = 3306
-
-# Phishing and Admin Domains
-PHISH_SERVER_URL = 'http://rewards.yourcompany.com'
-ADMIN_SERVER_URL = 'http://admin.yourcompany.com'
+      # Cloaked Subdomains
+      - APP_BASE_URL=http://admin.yourcompany.com/
+      - ADMIN_SERVER_URL=http://admin.yourcompany.com
+      - PHISH_SERVER_URL=http://rewards.yourcompany.com
+      - CI_ENVIRONMENT=production
 ```
+*(Alternatively, you can also copy `.env.example` to `.env` and configure it there).*
 
 ---
 

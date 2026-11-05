@@ -11,20 +11,23 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      # AWS RDS MySQL Configuration (can also be read from .env)
-      - DB_HOST=${DB_HOST:-localhost}
-      - DB_DATABASE=${DB_DATABASE:-phishing_simulation}
-      - DB_USER=${DB_USER:-phish_user}
-      - DB_PASS=${DB_PASS:-YourStrongRdsPassword}
-      - APP_BASE_URL=${APP_BASE_URL:-http://admin.yourcompany.com/}
-      - ADMIN_SERVER_URL=${ADMIN_SERVER_URL:-http://admin.yourcompany.com}
-      - PHISH_SERVER_URL=${PHISH_SERVER_URL:-http://rewards.yourcompany.com}
+      # AWS RDS MySQL Configuration (replace with your AWS RDS endpoint & credentials)
+      - DB_HOST=phishguard-db.cxxxxxxx.us-east-1.rds.amazonaws.com
+      - DB_DATABASE=phishing_simulation
+      - DB_USER=admin
+      - DB_PASS=YourStrongRdsPassword
+      - DB_PORT=3306
+
+      # Domain Cloaking & Application URLs
+      - APP_BASE_URL=http://admin.yourcompany.com/
+      - ADMIN_SERVER_URL=http://admin.yourcompany.com
+      - PHISH_SERVER_URL=http://rewards.yourcompany.com
       - CI_ENVIRONMENT=production
     volumes:
       # Persistent volume for logs, session data, cache, and uploaded attachments
       - phishguard_data:/var/www/html/writable
-      # Optional: Mount your host .env file directly
-      - ./.env:/var/www/html/.env
+      # Optional: Mount your host .env file directly if managing credentials in .env instead
+      # - ./.env:/var/www/html/.env
     networks:
       - phishguard_network
 

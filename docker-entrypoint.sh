@@ -17,27 +17,43 @@ if [ ! -f /var/www/html/.env ] && [ -f /var/www/html/.env.example ]; then
     cp /var/www/html/.env.example /var/www/html/.env
 fi
 
+# Function to safely update key in .env (safe for Docker bind-mounts)
+set_env_val() {
+    key="$1"
+    val="$2"
+    if [ -f /var/www/html/.env ]; then
+        if grep -q "^[# ]*${key}" /var/www/html/.env; then
+            sed "s|^[# ]*${key}[ ]*=.*|${key} = ${val}|" /var/www/html/.env > /tmp/.env.tmp && cat /tmp/.env.tmp > /var/www/html/.env && rm -f /tmp/.env.tmp
+        else
+            echo "${key} = ${val}" >> /var/www/html/.env
+        fi
+    fi
+}
+
 # Substitute DB environment variables into .env if passed from container
 if [ -n "$DB_HOST" ]; then
-    sed -i "s|^database.default.hostname = .*|database.default.hostname = $DB_HOST|" /var/www/html/.env
+    set_env_val "database.default.hostname" "$DB_HOST"
 fi
 if [ -n "$DB_DATABASE" ]; then
-    sed -i "s|^database.default.database = .*|database.default.database = $DB_DATABASE|" /var/www/html/.env
+    set_env_val "database.default.database" "$DB_DATABASE"
 fi
 if [ -n "$DB_USER" ]; then
-    sed -i "s|^database.default.username = .*|database.default.username = $DB_USER|" /var/www/html/.env
+    set_env_val "database.default.username" "$DB_USER"
 fi
 if [ -n "$DB_PASS" ]; then
-    sed -i "s|^database.default.password = .*|database.default.password = $DB_PASS|" /var/www/html/.env
+    set_env_val "database.default.password" "$DB_PASS"
+fi
+if [ -n "$DB_PORT" ]; then
+    set_env_val "database.default.port" "$DB_PORT"
 fi
 if [ -n "$APP_BASE_URL" ]; then
-    sed -i "s|^app.baseURL = .*|app.baseURL = '$APP_BASE_URL'|" /var/www/html/.env
+    set_env_val "app.baseURL" "'$APP_BASE_URL'"
 fi
 if [ -n "$ADMIN_SERVER_URL" ]; then
-    sed -i "s|^ADMIN_SERVER_URL = .*|ADMIN_SERVER_URL = '$ADMIN_SERVER_URL'|" /var/www/html/.env
+    set_env_val "ADMIN_SERVER_URL" "'$ADMIN_SERVER_URL'"
 fi
 if [ -n "$PHISH_SERVER_URL" ]; then
-    sed -i "s|^PHISH_SERVER_URL = .*|PHISH_SERVER_URL = '$PHISH_SERVER_URL'|" /var/www/html/.env
+    set_env_val "PHISH_SERVER_URL" "'$PHISH_SERVER_URL'"
 fi
 
 exec "$@"

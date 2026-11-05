@@ -199,5 +199,22 @@ class Database extends Config
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
         }
+
+        // Support Docker environment variables directly (DB_HOST, DB_USER, DB_PASS, DB_DATABASE, DB_PORT)
+        if ($host = (getenv('DB_HOST') ?: env('DB_HOST'))) {
+            $this->default['hostname'] = $host;
+        }
+        if ($database = (getenv('DB_DATABASE') ?: env('DB_DATABASE'))) {
+            $this->default['database'] = $database;
+        }
+        if ($user = (getenv('DB_USER') ?: env('DB_USER'))) {
+            $this->default['username'] = $user;
+        }
+        if ($pass = (getenv('DB_PASS') ?: env('DB_PASS'))) {
+            $this->default['password'] = $pass;
+        }
+        if ($port = (getenv('DB_PORT') ?: env('DB_PORT'))) {
+            $this->default['port'] = (int)$port;
+        }
     }
 }
