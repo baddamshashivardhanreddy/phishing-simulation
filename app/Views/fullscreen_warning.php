@@ -46,21 +46,6 @@
             box-shadow: none !important;
         }
 
-        .flash-toggle-btn {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            z-index: 2000;
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 7px 16px;
-            font-size: 12px;
-            cursor: pointer;
-            backdrop-filter: blur(6px);
-        }
-
         /* ================= PHASE 1: YOU HAVE BEEN HACKED! (5 TO 6 SECONDS SCARE) ================= */
         @keyframes skullPulse {
             0%, 100% { transform: scale(1) rotate(-3deg); filter: drop-shadow(0 0 15px rgba(255,0,0,0.8)); }
@@ -317,10 +302,6 @@
 </head>
 <body id="page-body">
 
-    <button type="button" class="flash-toggle-btn" id="toggleFlashBtn" onclick="toggleFlash()">
-        ⏸️ Pause Background Blink
-    </button>
-
     <!-- PHASE 1: YOU HAVE BEEN HACKED! (5 TO 6 SECONDS SCARE) -->
     <div id="hacked-scare-section">
         <div class="skull-symbol">☠️</div>
@@ -345,6 +326,7 @@
     </div>
 
     <!-- PHASE 2: PHISHING TEST SIMULATION DEBRIEF -->
+    <?php if (!isset($showDebrief) || !empty($showDebrief)): ?>
     <div id="phishing-test-section">
         <div class="test-card">
             <div class="test-badge">🛡️ INTERNAL SECURITY SIMULATION</div>
@@ -408,29 +390,36 @@
             </div>
 
             <div style="margin-top: 25px;">
-                <button type="button" class="btn-ack" onclick="alert('Simulation acknowledged. You can safely close this window.'); try{window.close();}catch(e){}">
+                <button type="button" class="btn-ack" onclick="handleSimulationAck()">
                     ✓ I Understand - Return to Safe Work
                 </button>
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
+    <script src="<?= base_url('assets/dialogs.js') ?>"></script>
     <script>
-        function toggleFlash() {
-            var body = document.getElementById('page-body');
-            var btn = document.getElementById('toggleFlashBtn');
-            if (body.classList.contains('paused')) {
-                body.classList.remove('paused');
-                btn.innerHTML = '⏸️ Pause Background Blink';
-            } else {
-                body.classList.add('paused');
-                btn.innerHTML = '▶️ Resume Background Blink';
-            }
+        function handleSimulationAck() {
+            customAlert({
+                title: 'Simulation Acknowledged',
+                message: 'Thank you for reviewing the security drill flags. You may safely close this window.',
+                type: 'success',
+                btnText: 'Close Window'
+            }).then(function() {
+                try { window.close(); } catch(e) {}
+            });
         }
 
-        // Run the 5.5s scare countdown then transition to Phishing Test
-        var secondsLeft = 5;
+        // Configurable Red Screen Duration (Default 5s) & Debrief Toggle
+        var duration = <?= (int)($redScreenDuration ?? 5) ?>;
+        if (duration <= 0) duration = 5;
+        var showDebrief = <?= (!isset($showDebrief) || !empty($showDebrief)) ? 'true' : 'false' ?>;
+
+        var secondsLeft = duration;
         var countdownEl = document.getElementById('countdown-num');
+        if (countdownEl) countdownEl.textContent = secondsLeft;
+
         var timerInterval = setInterval(function() {
             secondsLeft--;
             if (secondsLeft >= 0 && countdownEl) {
@@ -443,10 +432,24 @@
 
         setTimeout(function() {
             clearInterval(timerInterval);
-            document.getElementById('hacked-scare-section').style.display = 'none';
-            document.getElementById('phishing-test-section').style.display = 'flex';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 5500);
+            var phishingTest = document.getElementById('phishing-test-section');
+            var hackedScare = document.getElementById('hacked-scare-section');
+            if (showDebrief && phishingTest) {
+                if (hackedScare) hackedScare.style.display = 'none';
+                phishingTest.style.display = 'flex';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                // Locked terminal state: remain on red screen without showing debrief
+                var timerBar = document.querySelector('.scare-timer-bar');
+                if (timerBar) {
+                    timerBar.innerHTML = '<span style="color:#ef4444; font-weight:800; font-size:1.05rem;">🔒 WORKSTATION LOCKED - CONTACT INCIDENT RESPONSE</span>';
+                }
+                var terminal = document.querySelector('.terminal-box');
+                if (terminal) {
+                    terminal.innerHTML += '<div style="color:#ff3333; margin-top:8px; font-weight:bold;">[!] System lock active. Remote connection established. Workstation isolated.</div>';
+                }
+            }
+        }, duration * 1000);
     </script>
 </body>
 </html>

@@ -11,6 +11,8 @@
     <!-- Ionicons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <!-- Custom Modern Dialogs -->
+    <script src="<?= base_url('assets/dialogs.js') ?>"></script>
 </head>
 <body>
 
@@ -25,9 +27,9 @@
             <li><a href="<?= base_url('admin/campaigns') ?>"><ion-icon name="albums-outline" style="margin-right:10px"></ion-icon> <span>Campaigns</span></a></li>
             <li><a href="<?= base_url('admin/users') ?>"><ion-icon name="people-outline" style="margin-right:10px"></ion-icon> <span>Simulation Users</span></a></li>
             <li><a href="<?= base_url('admin/templates') ?>" class="active"><ion-icon name="mail-outline" style="margin-right:10px"></ion-icon> <span>Email Templates</span></a></li>
+            <li><a href="<?= base_url('admin/form') ?>"><ion-icon name="newspaper-outline" style="margin-right:10px"></ion-icon> <span>Landing Form</span></a></li>
             <li><a href="<?= base_url('admin/profile') ?>"><ion-icon name="shield-outline" style="margin-right:10px"></ion-icon> <span>Admin Users</span></a></li>
             <li><a href="<?= base_url('admin/settings') ?>"><ion-icon name="settings-outline" style="margin-right:10px"></ion-icon> <span>Settings</span></a></li>
-            <li><a href="<?= base_url('quiz') ?>" target="_blank"><ion-icon name="help-circle-outline" style="margin-right:10px"></ion-icon> <span>View Quiz</span></a></li>
             <li><a href="<?= base_url('admin/export') ?>"><ion-icon name="download-outline" style="margin-right:10px"></ion-icon> <span>Export Data</span></a></li>
         </ul>
         <div style="margin-top: auto; padding: 20px;">
@@ -87,7 +89,7 @@
                                         <ion-icon name="eye-outline"></ion-icon> Preview
                                     </button>
                                     <a href="<?= base_url('admin/delete_template/' . $t['id']) ?>" class="btn-danger-outline" 
-                                       onclick="return confirm('Delete this template?');" title="Delete Template">
+                                       onclick="return confirmAction(event, 'Permanently delete template \'<?= esc($t['name'], 'js') ?>\'? This action cannot be undone.', { type: 'danger', title: 'Delete Template?', confirmBtn: 'Yes, Delete Template' });" title="Delete Template">
                                         <ion-icon name="trash-outline"></ion-icon>
                                     </a>
                                 </td>

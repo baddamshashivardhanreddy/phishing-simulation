@@ -11,6 +11,8 @@
     <!-- Ionicons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <!-- Custom Modern Dialogs -->
+    <script src="<?= base_url('assets/dialogs.js') ?>"></script>
 </head>
 <body>
 
@@ -25,9 +27,9 @@
             <li><a href="<?= base_url('admin/campaigns') ?>"><ion-icon name="albums-outline" style="margin-right:10px"></ion-icon> <span>Campaigns</span></a></li>
             <li><a href="<?= base_url('admin/users') ?>" class="active"><ion-icon name="people-outline" style="margin-right:10px"></ion-icon> <span>Simulation Users</span></a></li>
             <li><a href="<?= base_url('admin/templates') ?>"><ion-icon name="mail-outline" style="margin-right:10px"></ion-icon> <span>Email Templates</span></a></li>
+            <li><a href="<?= base_url('admin/form') ?>"><ion-icon name="newspaper-outline" style="margin-right:10px"></ion-icon> <span>Landing Form</span></a></li>
             <li><a href="<?= base_url('admin/profile') ?>"><ion-icon name="shield-outline" style="margin-right:10px"></ion-icon> <span>Admin Users</span></a></li>
             <li><a href="<?= base_url('admin/settings') ?>"><ion-icon name="settings-outline" style="margin-right:10px"></ion-icon> <span>Settings</span></a></li>
-            <li><a href="<?= base_url('quiz') ?>" target="_blank"><ion-icon name="help-circle-outline" style="margin-right:10px"></ion-icon> <span>View Quiz</span></a></li>
             <li><a href="<?= base_url('admin/export') ?>"><ion-icon name="download-outline" style="margin-right:10px"></ion-icon> <span>Export Data</span></a></li>
         </ul>
         <div style="margin-top: auto; padding: 20px;">
@@ -146,7 +148,7 @@
                                             <ion-icon name="create-outline"></ion-icon> Edit
                                         </button>
                                         <a href="<?= base_url('admin/users/delete/' . $u['id']) ?>" class="btn-danger-outline" 
-                                           onclick="return confirm('Permanently delete <?= esc($u['email']) ?>?');" title="Delete user">
+                                           onclick="return confirmAction(event, 'Permanently delete user \'<?= esc($u['email'], 'js') ?>\' from the directory? This action cannot be undone.', { type: 'danger', title: 'Delete Directory User?', confirmBtn: 'Yes, Delete User' });" title="Delete user">
                                             <ion-icon name="trash-outline"></ion-icon>
                                         </a>
                                     </td>
@@ -307,22 +309,31 @@
         function confirmBulkDelete() {
             const checked = document.querySelectorAll('.user-select-check:checked');
             if (checked.length === 0) {
-                alert('Please select at least one user to delete.');
+                customAlert({
+                    title: 'No Users Selected',
+                    message: 'Please select at least one user from the directory to delete.',
+                    type: 'warning'
+                });
                 return;
             }
-            if (!confirm('Are you sure you want to permanently delete ' + checked.length + ' selected user(s) from the directory?')) {
-                return;
-            }
-            const form = document.getElementById('bulkDeleteForm');
-            form.innerHTML = '';
-            checked.forEach(cb => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'user_ids[]';
-                input.value = cb.value;
-                form.appendChild(input);
+            customConfirm({
+                title: 'Delete Directory Users?',
+                message: 'Are you sure you want to permanently delete <strong>' + checked.length + '</strong> selected user(s) from the directory? This action cannot be undone.',
+                type: 'danger',
+                confirmBtn: 'Yes, Delete Users'
+            }).then(confirmed => {
+                if (!confirmed) return;
+                const form = document.getElementById('bulkDeleteForm');
+                form.innerHTML = '';
+                checked.forEach(cb => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'user_ids[]';
+                    input.value = cb.value;
+                    form.appendChild(input);
+                });
+                form.submit();
             });
-            form.submit();
         }
 
         window.onclick = function(e) {

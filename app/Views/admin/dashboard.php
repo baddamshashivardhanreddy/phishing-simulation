@@ -13,6 +13,8 @@
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <!-- Chart.js for Gophish-style campaign visual charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Custom Modern Dialogs -->
+    <script src="<?= base_url('assets/dialogs.js') ?>"></script>
 </head>
 <body>
 
@@ -27,9 +29,9 @@
             <li><a href="<?= base_url('admin/campaigns') ?>"><ion-icon name="albums-outline" style="margin-right:10px"></ion-icon> <span>Campaigns</span></a></li>
             <li><a href="<?= base_url('admin/users') ?>"><ion-icon name="people-outline" style="margin-right:10px"></ion-icon> <span>Simulation Users</span></a></li>
             <li><a href="<?= base_url('admin/templates') ?>"><ion-icon name="mail-outline" style="margin-right:10px"></ion-icon> <span>Email Templates</span></a></li>
+            <li><a href="<?= base_url('admin/form') ?>"><ion-icon name="newspaper-outline" style="margin-right:10px"></ion-icon> <span>Landing Form</span></a></li>
             <li><a href="<?= base_url('admin/profile') ?>"><ion-icon name="shield-outline" style="margin-right:10px"></ion-icon> <span>Admin Users</span></a></li>
             <li><a href="<?= base_url('admin/settings') ?>"><ion-icon name="settings-outline" style="margin-right:10px"></ion-icon> <span>Settings</span></a></li>
-            <li><a href="<?= base_url('quiz') ?>" target="_blank"><ion-icon name="help-circle-outline" style="margin-right:10px"></ion-icon> <span>View Quiz</span></a></li>
             <li><a href="<?= base_url('admin/export?campaign_id=' . ($campaign['id'] ?? '')) ?>"><ion-icon name="download-outline" style="margin-right:10px"></ion-icon> <span>Export Data</span></a></li>
         </ul>
         <div style="margin-top: auto; padding: 20px;">
@@ -136,7 +138,7 @@
                     <ion-icon name="paper-plane-outline"></ion-icon> Launch Simulation
                 </button>
                 <?php if (($campaign['status'] ?? '') !== 'Completed'): ?>
-                    <a href="<?= base_url('admin/campaigns/complete/' . $campaign['id']) ?>" class="btn-secondary" onclick="return confirm('Mark this campaign as completed?');">
+                    <a href="<?= base_url('admin/campaigns/complete/' . $campaign['id']) ?>" class="btn-secondary" onclick="return confirmAction(event, 'Mark this campaign as completed?', { type: 'info', title: 'Complete Campaign?', confirmBtn: 'Mark Completed' });">
                         <ion-icon name="checkmark-done-outline"></ion-icon> Complete
                     </a>
                 <?php endif; ?>
@@ -146,7 +148,7 @@
                 <a href="<?= base_url('admin/export?campaign_id=' . $campaign['id']) ?>" class="btn-secondary">
                     <ion-icon name="cloud-download-outline"></ion-icon> Export Report
                 </a>
-                <a href="<?= base_url('admin/clear_logs?campaign_id=' . $campaign['id']) ?>" class="btn-secondary" style="color: #ef4444;" onclick="return confirm('Reset results and tracking logs for this campaign?');">
+                <a href="<?= base_url('admin/clear_logs?campaign_id=' . $campaign['id']) ?>" class="btn-secondary" style="color: #ef4444;" onclick="return confirmAction(event, 'Reset results and tracking logs for this campaign? Enrolled targets will remain.', { type: 'warning', title: 'Reset Campaign Results?', confirmBtn: 'Yes, Reset Results' });">
                     <ion-icon name="refresh-outline"></ion-icon> Reset Results
                 </a>
             </div>
@@ -204,7 +206,7 @@
                 </div>
             </div>
 
-            <!-- Stage 4: Submitted Data / Quiz -->
+            <!-- Stage 4: Submitted Credentials / Data -->
             <div class="funnel-card stage-submitted">
                 <div class="funnel-header">
                     <span class="funnel-title">Submitted Data</span>
@@ -250,10 +252,37 @@
 
             <!-- Campaign Quick Details & Test Link -->
             <div class="table-container">
-                <div class="table-header">
-                    <h3>Simulation Awareness Details</h3>
+                <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <h3>Simulation Drill Configuration & Quick Tester</h3>
+                    <button type="button" class="btn-secondary" onclick="openModal('editDrillSettingsModal')" style="font-size: 0.82rem; padding: 6px 14px; font-weight: 600;">
+                        <ion-icon name="settings-outline"></ion-icon> Configure Drill Behavior
+                    </button>
                 </div>
                 <div style="font-size: 0.9rem; line-height: 1.8; color: #475569;">
+                    <!-- Active Settings Status Pills -->
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;">
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px; font-size: 0.82rem; display: flex; align-items: center; gap: 6px;">
+                            <strong>Debrief Screen:</strong>
+                            <?php if (!isset($campaign['show_debrief_screen']) || !empty($campaign['show_debrief_screen'])): ?>
+                                <span style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 6px; font-weight: 700;">🟢 Enabled (Shows Test Tips)</span>
+                            <?php else: ?>
+                                <span style="background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 6px; font-weight: 700;">🔴 Disabled (Workstation Remains Locked)</span>
+                            <?php endif; ?>
+                        </div>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px; font-size: 0.82rem; display: flex; align-items: center; gap: 6px;">
+                            <strong>Entry Mode:</strong>
+                            <?php if (!empty($campaign['has_credential_form'])): ?>
+                                <span style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 6px; font-weight: 700;">📝 Microsoft Forms First</span>
+                            <?php else: ?>
+                                <span style="background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 6px; font-weight: 700;">⚡ Instant Red Alert Screen</span>
+                            <?php endif; ?>
+                        </div>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px; font-size: 0.82rem; display: flex; align-items: center; gap: 6px;">
+                            <strong>Red Screen Countdown:</strong>
+                            <span style="font-weight: 700; color: #0f172a;"><?= (int)($campaign['red_screen_duration'] ?? 5) ?>s</span>
+                        </div>
+                    </div>
+
                     <p><strong>Educational Objective:</strong> Train employees to recognize urgent spoofed emails, inspect suspicious links, and report phishing attacks to IT Security.</p>
                     <p><strong>Reporting vs Clicking:</strong> Employees who report the simulation are recorded as <em>Security Champions</em>. Victims who click are routed to interactive awareness training.</p>
                     
@@ -288,7 +317,7 @@
                         <ion-icon name="add-outline"></ion-icon> Add / Import Targets
                     </button>
                     <?php if (!empty($targets)): ?>
-                        <a href="<?= base_url('admin/clear_targets?campaign_id=' . $campaign['id']) ?>" class="btn-secondary" style="color: #ef4444;" onclick="return confirm('Clear ALL enrolled targets from this campaign?');">
+                        <a href="<?= base_url('admin/clear_targets?campaign_id=' . $campaign['id']) ?>" class="btn-secondary" style="color: #ef4444;" onclick="return confirmAction(event, 'Clear ALL enrolled targets from this campaign? All progression data for these targets will be deleted.', { type: 'danger', title: 'Clear Enrolled Targets?', confirmBtn: 'Clear All Targets' });">
                             <ion-icon name="trash-outline"></ion-icon> Clear All
                         </a>
                     <?php endif; ?>
@@ -460,12 +489,12 @@
                                         <?php if (empty($t['reported'])): ?>
                                             <a href="<?= base_url('admin/mark_reported/' . $t['id'] . '?campaign_id=' . $campaign['id']) ?>" 
                                                class="btn-secondary" style="padding: 4px 8px; font-size: 0.8rem; color: #059669;" 
-                                               onclick="return confirm('Mark <?= esc($t['email']) ?> as Reported Phish?');" title="Mark as Reported Phish">
+                                               onclick="return confirmAction(event, 'Mark <?= esc($t['email'], 'js') ?> as Reported Phish (Security Champion)?', { type: 'success', title: 'Mark as Reported?', confirmBtn: 'Mark Reported' });" title="Mark as Reported Phish">
                                                 <ion-icon name="shield-checkmark-outline"></ion-icon>
                                             </a>
                                         <?php endif; ?>
                                         <a href="<?= base_url('admin/delete_target/' . $t['id'] . '?campaign_id=' . $campaign['id']) ?>" class="btn-danger-outline" 
-                                           onclick="return confirm('Remove <?= esc($t['email']) ?> from campaign?');" title="Delete target">
+                                           onclick="return confirmAction(event, 'Remove <?= esc($t['email'], 'js') ?> from this campaign?', { type: 'danger', title: 'Remove Target?', confirmBtn: 'Remove Target' });" title="Delete target">
                                             <ion-icon name="trash-outline"></ion-icon>
                                         </a>
                                     </td>
@@ -732,7 +761,8 @@
                                 <em>Turn ON if you want targets to submit personal/employee details into a Microsoft Forms page first.</em></small>
                             </div>
                             <div class="switch-control">
-                                <input type="checkbox" name="has_credential_form" value="1" id="hasCredentialFormCheck">
+                                <input type="hidden" name="has_credential_form" value="0">
+                                <input type="checkbox" name="has_credential_form" value="1" id="hasCredentialFormCheck" <?= !empty($campaign['has_credential_form']) ? 'checked' : '' ?>>
                                 <span class="switch-slider"></span>
                             </div>
                         </label>
@@ -751,7 +781,7 @@
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <input type="number" name="red_screen_duration" id="redScreenDurationInput" value="5" min="1" max="60" class="form-control" style="width: 90px; font-size: 0.95rem; text-align: center; font-weight: 700;">
+                                <input type="number" name="red_screen_duration" id="redScreenDurationInput" value="<?= esc($campaign['red_screen_duration'] ?? 5) ?>" min="1" max="60" class="form-control" style="width: 90px; font-size: 0.95rem; text-align: center; font-weight: 700;">
                                 <span style="font-size: 0.82rem; color: #64748b;">seconds of blinking "YOU HAVE BEEN HACKED!" alert</span>
                             </div>
                         </div>
@@ -764,7 +794,8 @@
                                 <em>Turn OFF if you want the screen to remain locked without revealing that it was a test drill.</em></small>
                             </div>
                             <div class="switch-control">
-                                <input type="checkbox" name="show_debrief_screen" value="1" id="showDebriefCheck" checked>
+                                <input type="hidden" name="show_debrief_screen" value="0">
+                                <input type="checkbox" name="show_debrief_screen" value="1" id="showDebriefCheck" <?= (!isset($campaign['show_debrief_screen']) || !empty($campaign['show_debrief_screen'])) ? 'checked' : '' ?>>
                                 <span class="switch-slider"></span>
                             </div>
                         </label>
@@ -776,6 +807,71 @@
                     <button type="button" class="btn-secondary" onclick="closeModal('launchModal')" style="padding: 10px 20px;">Cancel</button>
                     <button type="submit" class="btn-launch-glow">
                         <ion-icon name="paper-plane-outline"></ion-icon> Launch Simulation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         MODAL 1B: Quick Campaign Drill Settings Configuration
+         ========================================================== -->
+    <div id="editDrillSettingsModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>⚙️ Simulation Drill Behavior Settings</h3>
+                <button type="button" class="modal-close" onclick="closeModal('editDrillSettingsModal')">&times;</button>
+            </div>
+            <form action="<?= base_url('admin/campaigns/update_settings/' . $campaign['id']) ?>" method="post">
+                <div class="modal-body">
+                    <p style="font-size: 0.88rem; color: #475569; margin-bottom: 1.25rem;">
+                        Customize what targets experience when clicking phishing simulation links for <strong><?= esc($campaign['name']) ?></strong>.
+                    </p>
+
+                    <!-- Toggle 1: Require MS Forms -->
+                    <label class="toggle-switch-card" style="margin-top: 0; margin-bottom: 14px;">
+                        <div class="toggle-switch-text">
+                            <strong>Require Microsoft Forms Data Submission</strong>
+                            <small>Turn ON to show Microsoft Forms page first. Turn OFF to show the red alert screen immediately.</small>
+                        </div>
+                        <div class="switch-control">
+                            <input type="hidden" name="has_credential_form" value="0">
+                            <input type="checkbox" name="has_credential_form" value="1" <?= !empty($campaign['has_credential_form']) ? 'checked' : '' ?>>
+                            <span class="switch-slider"></span>
+                        </div>
+                    </label>
+
+                    <!-- Red Screen Duration -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
+                        <label style="font-size: 0.84rem; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: block;">
+                            ⏱️ Red Screen Alert Duration
+                        </label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="number" name="red_screen_duration" value="<?= esc($campaign['red_screen_duration'] ?? 5) ?>" min="1" max="60" class="form-control" style="width: 90px; text-align: center; font-weight: 700;">
+                            <span style="font-size: 0.82rem; color: #64748b;">seconds before transition/lock</span>
+                        </div>
+                    </div>
+
+                    <!-- Toggle 2: Show Debrief Screen -->
+                    <label class="toggle-switch-card" style="margin-top: 0; margin-bottom: 0;">
+                        <div class="toggle-switch-text">
+                            <strong>Display "THIS WAS A PHISHING TEST" Debrief Screen</strong>
+                            <small>
+                                <strong>ON:</strong> Transitions to educational tips after the countdown.<br>
+                                <strong>OFF:</strong> Workstation remains locked on the red screen without revealing it was a drill.
+                            </small>
+                        </div>
+                        <div class="switch-control">
+                            <input type="hidden" name="show_debrief_screen" value="0">
+                            <input type="checkbox" name="show_debrief_screen" value="1" <?= (!isset($campaign['show_debrief_screen']) || !empty($campaign['show_debrief_screen'])) ? 'checked' : '' ?>>
+                            <span class="switch-slider"></span>
+                        </div>
+                    </label>
+                </div>
+                <div class="modal-footer" style="padding: 1.1rem 1.75rem;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editDrillSettingsModal')" style="padding: 10px 20px;">Cancel</button>
+                    <button type="submit" class="btn-primary" style="padding: 10px 22px; font-weight: 700;">
+                        Save Drill Settings
                     </button>
                 </div>
             </form>
@@ -1033,22 +1129,31 @@
         function confirmBulkDeleteTargets() {
             const checked = document.querySelectorAll('.target-select-check:checked');
             if (checked.length === 0) {
-                alert('Please select at least one target to remove.');
+                customAlert({
+                    title: 'No Targets Selected',
+                    message: 'Please select at least one target checkbox from the list to remove.',
+                    type: 'warning'
+                });
                 return;
             }
-            if (!confirm('Remove ' + checked.length + ' selected target(s) from this campaign?')) {
-                return;
-            }
-            const form = document.getElementById('bulkDeleteTargetsForm');
-            form.querySelectorAll('input[name="target_ids[]"]').forEach(el => el.remove());
-            checked.forEach(cb => {
-                const inp = document.createElement('input');
-                inp.type = 'hidden';
-                inp.name = 'target_ids[]';
-                inp.value = cb.value;
-                form.appendChild(inp);
+            customConfirm({
+                title: 'Remove Selected Targets?',
+                message: 'Remove <strong>' + checked.length + '</strong> selected target(s) from this campaign? This action cannot be undone.',
+                type: 'danger',
+                confirmBtn: 'Yes, Remove Selected'
+            }).then(confirmed => {
+                if (!confirmed) return;
+                const form = document.getElementById('bulkDeleteTargetsForm');
+                form.querySelectorAll('input[name="target_ids[]"]').forEach(el => el.remove());
+                checked.forEach(cb => {
+                    const inp = document.createElement('input');
+                    inp.type = 'hidden';
+                    inp.name = 'target_ids[]';
+                    inp.value = cb.value;
+                    form.appendChild(inp);
+                });
+                form.submit();
             });
-            form.submit();
         }
 
         // Pre-fill Single Send Modal
@@ -1108,7 +1213,11 @@
             const out = document.getElementById('quickLinkOutput').innerText;
             if (out && out.startsWith('http')) {
                 navigator.clipboard.writeText(out);
-                alert('Copied simulation URL: ' + out);
+                customAlert({
+                    title: 'Simulation Link Copied',
+                    message: 'Simulation link copied to clipboard:<br><code style="font-size:0.8rem; color:#0284c7; word-break:break-all;">' + out + '</code>',
+                    type: 'success'
+                });
             }
         }
 
@@ -1118,7 +1227,11 @@
                 const url = '<?= base_url("image/") ?>' + encodeURIComponent(email) + '/<?= $campaign['id'] ?>/pixel.gif';
                 window.open(url, '_blank');
             } else {
-                alert('Please enter an email address above to test tracking pixel');
+                customAlert({
+                    title: 'Email Address Required',
+                    message: 'Please enter a target email address in the input above to test tracking pixel.',
+                    type: 'info'
+                });
             }
         }
 

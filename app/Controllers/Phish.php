@@ -255,26 +255,75 @@ class Phish extends Controller
             $submittedPayload = json_decode($target['submitted_data_payload'], true);
         }
 
+        $campaignModel = new CampaignModel();
         $campaign = null;
         if ($campaignId) {
-            $campaignModel = new CampaignModel();
             $campaign = $campaignModel->find($campaignId);
+        }
+        if (!$campaign) {
+            $campaign = $campaignModel->orderBy('id', 'DESC')->first();
         }
 
         // Form is optional, by default keep the red screen (hasForm = false)
-        $hasForm = !empty($campaign['has_credential_form']);
-        $redScreenDuration = (int)($campaign['red_screen_duration'] ?? 5);
+        if ($this->request->getGet('has_form') !== null) {
+            $hasForm = !empty($this->request->getGet('has_form'));
+        } else {
+            $hasForm = !empty($campaign['has_credential_form']);
+        }
+
+        if ($this->request->getGet('duration') !== null) {
+            $redScreenDuration = (int)$this->request->getGet('duration');
+        } else {
+            $redScreenDuration = (int)($campaign['red_screen_duration'] ?? 5);
+        }
         if ($redScreenDuration <= 0) $redScreenDuration = 5;
-        $showDebrief = !isset($campaign['show_debrief_screen']) || !empty($campaign['show_debrief_screen']);
+
+        if ($this->request->getGet('show_debrief') !== null) {
+            $showDebrief = !empty($this->request->getGet('show_debrief'));
+        } else {
+            $showDebrief = !isset($campaign['show_debrief_screen']) || !empty($campaign['show_debrief_screen']);
+        }
+
+        // Load custom simulation form configuration
+        $formModel = new \App\Models\SimulationFormModel();
+        $formData = null;
+        try {
+            $formData = $formModel->where('is_active', 1)->first();
+            if (!$formData) {
+                $formData = $formModel->first();
+            }
+        } catch (\Throwable $e) {}
+
+        if (!$formData) {
+            $formData = [
+                'brand_name' => 'Microsoft Forms',
+                'badge_text' => 'Internal Verification',
+                'theme_color' => '#008272',
+                'hero_title' => 'Diwali Special Employee Bonus & Goodies Claim',
+                'hero_description' => 'Please complete this short employee participation activity to verify your eligibility and confirm your exclusive festive bonus distribution.',
+                'notice_text' => 'Hi {name}, when you submit this form, the owner will see your name and email address.',
+                'q1_label' => '1. Full Name',
+                'q1_placeholder' => 'Enter your full name',
+                'q2_label' => '2. Work Email Address',
+                'q2_placeholder' => 'name@company.com',
+                'q3_label' => '3. Employee ID Number',
+                'q3_placeholder' => 'e.g. EMP-20248',
+                'q4_label' => '4. Current Employment Status',
+                'q4_options' => "Full-Time Active Employee\nContract / Consulting Associate\nProbationary / Trainee",
+                'submit_btn_text' => 'Submit',
+                'footer_text' => 'Never give out your password. This content is created by the owner of the form. The data you submit will be sent to the form owner. Microsoft is not responsible for the privacy or security practices of its customers.'
+            ];
+        }
 
         return view('training', [
             'email' => $email,
-            'campaignId' => $campaignId,
+            'campaignId' => $campaignId ?: ($campaign['id'] ?? null),
             'target' => $target,
             'submittedPayload' => $submittedPayload,
             'hasForm' => $hasForm,
             'redScreenDuration' => $redScreenDuration,
             'showDebrief' => $showDebrief,
+            'formData' => $formData,
             'showAlert' => (bool)$this->request->getGet('alert')
         ]);
     }
@@ -349,11 +398,43 @@ class Phish extends Controller
             $submittedPayload = json_decode($target['submitted_data_payload'], true);
         }
 
+        $campaignModel = new CampaignModel();
+        $campaign = null;
+        if ($campaignId) {
+            $campaign = $campaignModel->find($campaignId);
+        }
+        if (!$campaign) {
+            $campaign = $campaignModel->orderBy('id', 'DESC')->first();
+        }
+
+        // Form is optional, by default keep the red screen (hasForm = false)
+        if ($this->request->getGet('has_form') !== null) {
+            $hasForm = !empty($this->request->getGet('has_form'));
+        } else {
+            $hasForm = !empty($campaign['has_credential_form']);
+        }
+
+        if ($this->request->getGet('duration') !== null) {
+            $redScreenDuration = (int)$this->request->getGet('duration');
+        } else {
+            $redScreenDuration = (int)($campaign['red_screen_duration'] ?? 5);
+        }
+        if ($redScreenDuration <= 0) $redScreenDuration = 5;
+
+        if ($this->request->getGet('show_debrief') !== null) {
+            $showDebrief = !empty($this->request->getGet('show_debrief'));
+        } else {
+            $showDebrief = !isset($campaign['show_debrief_screen']) || !empty($campaign['show_debrief_screen']);
+        }
+
         return view('fullscreen_warning', [
             'email' => $email,
-            'campaignId' => $campaignId,
+            'campaignId' => $campaignId ?: ($campaign['id'] ?? null),
             'target' => $target,
-            'submittedPayload' => $submittedPayload
+            'submittedPayload' => $submittedPayload,
+            'hasForm' => $hasForm,
+            'redScreenDuration' => $redScreenDuration,
+            'showDebrief' => $showDebrief
         ]);
     }
 

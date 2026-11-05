@@ -11,6 +11,8 @@
     <!-- Ionicons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <!-- Custom Modern Dialogs -->
+    <script src="<?= base_url('assets/dialogs.js') ?>"></script>
 </head>
 <body>
 
@@ -25,9 +27,9 @@
             <li><a href="<?= base_url('admin/campaigns') ?>" class="active"><ion-icon name="albums-outline" style="margin-right:10px"></ion-icon> <span>Campaigns</span></a></li>
             <li><a href="<?= base_url('admin/users') ?>"><ion-icon name="people-outline" style="margin-right:10px"></ion-icon> <span>Simulation Users</span></a></li>
             <li><a href="<?= base_url('admin/templates') ?>"><ion-icon name="mail-outline" style="margin-right:10px"></ion-icon> <span>Email Templates</span></a></li>
+            <li><a href="<?= base_url('admin/form') ?>"><ion-icon name="newspaper-outline" style="margin-right:10px"></ion-icon> <span>Landing Form</span></a></li>
             <li><a href="<?= base_url('admin/profile') ?>"><ion-icon name="shield-outline" style="margin-right:10px"></ion-icon> <span>Admin Users</span></a></li>
             <li><a href="<?= base_url('admin/settings') ?>"><ion-icon name="settings-outline" style="margin-right:10px"></ion-icon> <span>Settings</span></a></li>
-            <li><a href="<?= base_url('quiz') ?>" target="_blank"><ion-icon name="help-circle-outline" style="margin-right:10px"></ion-icon> <span>View Quiz</span></a></li>
             <li><a href="<?= base_url('admin/export') ?>"><ion-icon name="download-outline" style="margin-right:10px"></ion-icon> <span>Export Data</span></a></li>
         </ul>
         <div style="margin-top: auto; padding: 20px;">
@@ -155,14 +157,14 @@
                                             <ion-icon name="stats-chart-outline"></ion-icon> Dashboard
                                         </a>
                                         <?php if ($c['status'] !== 'Completed'): ?>
-                                            <a href="<?= base_url('admin/campaigns/complete/' . $c['id']) ?>" class="btn-secondary" style="padding: 5px 10px; font-size: 0.8rem; text-decoration: none;" onclick="return confirm('Mark campaign <?= esc($c['name']) ?> as completed?');" title="Mark as Completed">
+                                            <a href="<?= base_url('admin/campaigns/complete/' . $c['id']) ?>" class="btn-secondary" style="padding: 5px 10px; font-size: 0.8rem; text-decoration: none;" onclick="return confirmAction(event, 'Mark campaign \'<?= esc($c['name'], 'js') ?>\' as completed?', { type: 'info', title: 'Complete Campaign?', confirmBtn: 'Mark Completed' });" title="Mark as Completed">
                                                 <ion-icon name="checkmark-done-outline"></ion-icon>
                                             </a>
                                         <?php endif; ?>
                                         <a href="<?= base_url('admin/export?campaign_id=' . $c['id']) ?>" class="btn-secondary" style="padding: 5px 10px; font-size: 0.8rem; text-decoration: none;" title="Export CSV Report">
                                             <ion-icon name="download-outline"></ion-icon>
                                         </a>
-                                        <a href="<?= base_url('admin/campaigns/delete/' . $c['id']) ?>" class="btn-danger-outline" style="padding: 5px 10px; font-size: 0.8rem; text-decoration: none;" onclick="return confirm('Permanently delete campaign \'<?= esc($c['name']) ?>\' and its results?');" title="Delete Campaign">
+                                        <a href="<?= base_url('admin/campaigns/delete/' . $c['id']) ?>" class="btn-danger-outline" style="padding: 5px 10px; font-size: 0.8rem; text-decoration: none;" onclick="return confirmAction(event, 'Permanently delete campaign \'<?= esc($c['name'], 'js') ?>\' and all tracking statistics? This action cannot be undone.', { type: 'danger', title: 'Delete Campaign?', confirmBtn: 'Yes, Delete Campaign' });" title="Delete Campaign">
                                             <ion-icon name="trash-outline"></ion-icon>
                                         </a>
                                     </td>
@@ -362,6 +364,7 @@
                                 <em>Turn ON if you want targets to submit personal/employee details into a Microsoft Forms page first.</em></small>
                             </div>
                             <div class="switch-control">
+                                <input type="hidden" name="has_credential_form" value="0">
                                 <input type="checkbox" name="has_credential_form" value="1" id="hasCredentialFormCheck">
                                 <span class="switch-slider"></span>
                             </div>
@@ -394,6 +397,7 @@
                                 <em>Turn OFF if you want the screen to remain locked without revealing that it was a test drill.</em></small>
                             </div>
                             <div class="switch-control">
+                                <input type="hidden" name="show_debrief_screen" value="0">
                                 <input type="checkbox" name="show_debrief_screen" value="1" id="showDebriefCheck" checked>
                                 <span class="switch-slider"></span>
                             </div>

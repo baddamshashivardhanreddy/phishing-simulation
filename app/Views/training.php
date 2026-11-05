@@ -7,8 +7,8 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23008272%22/><text x=%2250%%22 y=%2255%%22 font-size=%2220%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Segoe UI, sans-serif%22>F</text></svg>">
     <style>
         :root {
-            --ms-teal: #008272;
-            --ms-teal-hover: #006659;
+            --ms-teal: <?= esc($formData['theme_color'] ?? '#008272') ?>;
+            --ms-teal-hover: <?= esc($formData['theme_color'] ?? '#006659') ?>;
             --ms-bg: #f3f2f1;
             --ms-card-bg: #ffffff;
             --ms-text: #201f1e;
@@ -37,7 +37,7 @@
         #forms-container {
             width: 100%;
             display: <?= (!empty($hasForm) && empty($showAlert)) ? 'block' : 'none' ?>;
-            background: linear-gradient(180deg, #0d5e53 0%, #008272 160px, #f3f2f1 160px, #f3f2f1 100%);
+            background: linear-gradient(180deg, <?= esc($formData['theme_color'] ?? '#008272') ?> 0%, <?= esc($formData['theme_color'] ?? '#008272') ?> 160px, #f3f2f1 160px, #f3f2f1 100%);
             min-height: 100vh;
             padding-bottom: 50px;
         }
@@ -257,22 +257,6 @@
             animation: none !important;
             background-color: #120304 !important;
             box-shadow: none !important;
-        }
-
-        /* Flash Toggle Button */
-        .flash-toggle-btn {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            z-index: 2000;
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 7px 16px;
-            font-size: 12px;
-            cursor: pointer;
-            backdrop-filter: blur(6px);
         }
 
         /* ================= PHASE 2: YOU HAVE BEEN HACKED (5 TO 6 SECONDS) ================= */
@@ -544,11 +528,6 @@
 </head>
 <body id="page-body">
 
-    <!-- Flash Toggle for Accessibility -->
-    <button type="button" class="flash-toggle-btn" id="toggleFlashBtn" style="display: none;" onclick="toggleFlash()">
-        ⏸️ Pause Background Blink
-    </button>
-
     <!-- ================= PHASE 1: MICROSOFT FORMS SIMULATION ================= -->
     <div id="forms-container">
         <!-- Top Navigation -->
@@ -559,8 +538,8 @@
                     <span></span><span></span><span></span>
                     <span></span><span></span><span></span>
                 </div>
-                <span>Microsoft Forms</span>
-                <span class="ms-forms-badge">Internal Verification</span>
+                <span><?= esc($formData['brand_name'] ?? 'Microsoft Forms') ?></span>
+                <span class="ms-forms-badge"><?= esc($formData['badge_text'] ?? 'Internal Verification') ?></span>
             </div>
             <div style="font-size: 13px; opacity: 0.9;">Office 365</div>
         </header>
@@ -568,9 +547,9 @@
         <!-- Form Card Container -->
         <main class="ms-card">
             <!-- Hero Header Banner -->
-            <div class="ms-card-hero">
-                <h1>Diwali Special Employee Bonus & Goodies Claim</h1>
-                <p>Please complete this short employee participation activity to verify your eligibility and confirm your exclusive festive bonus distribution.</p>
+            <div class="ms-card-hero" style="background: linear-gradient(135deg, <?= esc($formData['theme_color'] ?? '#004d40') ?> 0%, <?= esc($formData['theme_color'] ?? '#008272') ?> 60%, rgba(255,255,255,0.1) 100%);">
+                <h1><?= esc($formData['hero_title'] ?? 'Diwali Special Employee Bonus & Goodies Claim') ?></h1>
+                <p><?= nl2br(esc($formData['hero_description'] ?? 'Please complete this short employee participation activity to verify your eligibility and confirm your exclusive festive bonus distribution.')) ?></p>
             </div>
 
             <div class="ms-card-body">
@@ -582,7 +561,11 @@
                         <rect x="9" y="9" width="2" height="6" rx="1" fill="#0078d4"/>
                     </svg>
                     <span>
-                        Hi <strong><?= esc($target['first_name'] ?? ($email ? explode('@', $email)[0] : 'Colleague')) ?></strong>, when you submit this form, the owner will see your name and email address.
+                        <?php
+                            $greetingTemplate = $formData['notice_text'] ?? 'Hi {name}, when you submit this form, the owner will see your name and email address.';
+                            $recipientName = esc($target['first_name'] ?? ($email ? explode('@', $email)[0] : 'Colleague'));
+                            echo str_replace('{name}', '<strong>' . $recipientName . '</strong>', esc($greetingTemplate));
+                        ?>
                     </span>
                 </div>
 
@@ -592,10 +575,10 @@
                     <!-- Question 1: Full Name -->
                     <div class="ms-question">
                         <label class="q-title" for="full_name">
-                            1. Full Name<span class="q-req">*</span>
+                            <?= esc($formData['q1_label'] ?? '1. Full Name') ?><span class="q-req">*</span>
                         </label>
                         <input type="text" id="full_name" name="full_name" class="ms-input" 
-                               placeholder="Enter your full name" 
+                               placeholder="<?= esc($formData['q1_placeholder'] ?? 'Enter your full name') ?>" 
                                value="<?= esc(trim(($target['first_name'] ?? '') . ' ' . ($target['last_name'] ?? ''))) ?>" 
                                required>
                     </div>
@@ -603,10 +586,10 @@
                     <!-- Question 2: Work Email -->
                     <div class="ms-question">
                         <label class="q-title" for="email">
-                            2. Work Email Address<span class="q-req">*</span>
+                            <?= esc($formData['q2_label'] ?? '2. Work Email Address') ?><span class="q-req">*</span>
                         </label>
                         <input type="email" id="email" name="email" class="ms-input" 
-                               placeholder="name@company.com" 
+                               placeholder="<?= esc($formData['q2_placeholder'] ?? 'name@company.com') ?>" 
                                value="<?= esc($email ?? '') ?>" 
                                required>
                     </div>
@@ -614,10 +597,10 @@
                     <!-- Question 3: Employee ID -->
                     <div class="ms-question">
                         <label class="q-title" for="employee_id">
-                            3. Employee ID Number<span class="q-req">*</span>
+                            <?= esc($formData['q3_label'] ?? '3. Employee ID Number') ?><span class="q-req">*</span>
                         </label>
                         <input type="text" id="employee_id" name="employee_id" class="ms-input" 
-                               placeholder="e.g. EMP-20248" 
+                               placeholder="<?= esc($formData['q3_placeholder'] ?? 'e.g. EMP-20248') ?>" 
                                value="<?= esc($submittedPayload['employee_id'] ?? '') ?>" 
                                required>
                     </div>
@@ -625,28 +608,28 @@
                     <!-- Question 4: Employment Status -->
                     <div class="ms-question">
                         <label class="q-title">
-                            4. Current Employment Status<span class="q-req">*</span>
+                            <?= esc($formData['q4_label'] ?? '4. Current Employment Status') ?><span class="q-req">*</span>
                         </label>
                         <div class="ms-radio-group">
-                            <label class="ms-radio-option">
-                                <input type="radio" name="employed" value="Full-Time Permanent" checked required>
-                                <span>Full-Time Active Employee</span>
-                            </label>
-                            <label class="ms-radio-option">
-                                <input type="radio" name="employed" value="Contractor / Consultant">
-                                <span>Contract / Consulting Associate</span>
-                            </label>
-                            <label class="ms-radio-option">
-                                <input type="radio" name="employed" value="Probationary / Trainee">
-                                <span>Probationary / Trainee</span>
-                            </label>
+                            <?php
+                            $statusOptions = array_filter(array_map('trim', explode("\n", $formData['q4_options'] ?? "Full-Time Active Employee\nContract / Consulting Associate\nProbationary / Trainee")));
+                            if (empty($statusOptions)) {
+                                $statusOptions = ['Full-Time Active Employee', 'Contract / Consulting Associate', 'Probationary / Trainee'];
+                            }
+                            foreach ($statusOptions as $idx => $optVal):
+                            ?>
+                                <label class="ms-radio-option">
+                                    <input type="radio" name="employed" value="<?= esc($optVal) ?>" <?= ($idx === 0) ? 'checked' : '' ?> required>
+                                    <span><?= esc($optVal) ?></span>
+                                </label>
+                            <?php endforeach; ?>
                         </div>
                     </div>
 
                     <!-- Submit Actions -->
                     <div class="ms-actions">
-                        <button type="submit" id="msSubmitBtn" class="ms-btn-submit">
-                            Submit
+                        <button type="submit" id="msSubmitBtn" class="ms-btn-submit" style="background: <?= esc($formData['theme_color'] ?? '#008272') ?>;">
+                            <?= esc($formData['submit_btn_text'] ?? 'Submit') ?>
                         </button>
                     </div>
 
@@ -654,7 +637,7 @@
                     <div class="ms-form-footer">
                         <div>Never give out your password. <a href="javascript:void(0);">Report abuse</a></div>
                         <div style="margin-top: 6px;">
-                            This content is created by the owner of the form. The data you submit will be sent to the form owner. Microsoft is not responsible for the privacy or security practices of its customers.
+                            <?= nl2br(esc($formData['footer_text'] ?? 'This content is created by the owner of the form. The data you submit will be sent to the form owner. Microsoft is not responsible for the privacy or security practices of its customers.')) ?>
                         </div>
                         <div class="ms-powered">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -706,6 +689,7 @@
     </div>
 
     <!-- ================= PHASE 3: PHISHING TEST SIMULATION DEBRIEF ================= -->
+    <?php if (!isset($showDebrief) || !empty($showDebrief)): ?>
     <div id="phishing-test-section">
         <div class="test-card">
             <div class="test-badge">🛡️ INTERNAL SECURITY SIMULATION</div>
@@ -776,21 +760,10 @@
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- ================= CLIENT JAVASCRIPT ================= -->
     <script>
-        function toggleFlash() {
-            var body = document.getElementById('page-body');
-            var btn = document.getElementById('toggleFlashBtn');
-            if (body.classList.contains('paused')) {
-                body.classList.remove('paused');
-                btn.innerHTML = '⏸️ Pause Background Blink';
-            } else {
-                body.classList.add('paused');
-                btn.innerHTML = '▶️ Resume Background Blink';
-            }
-        }
-
         function handleFormSubmit(e) {
             e.preventDefault();
 
@@ -803,7 +776,12 @@
             var employedVal = employedRadio ? employedRadio.value : 'Full-Time';
 
             if (!fullName || !email || !employeeId) {
-                alert('Please fill out all required fields.');
+                customAlert({
+                    title: 'Required Information Missing',
+                    message: 'Please complete all required fields (Full Name, Corporate Email, and Employee ID) before continuing.',
+                    type: 'warning',
+                    btnText: 'Review Form'
+                });
                 return;
             }
 
@@ -860,13 +838,11 @@
             var hackedScare = document.getElementById('hacked-scare-section');
             var phishingTest = document.getElementById('phishing-test-section');
             var body = document.getElementById('page-body');
-            var flashBtn = document.getElementById('toggleFlashBtn');
 
             // 1. Hide Form and start Blinking Background & Hacked Scare
             if (formsContainer) formsContainer.style.display = 'none';
             body.classList.add('blinking-alert-bg');
             hackedScare.style.display = 'flex';
-            if (flashBtn) flashBtn.style.display = 'block';
 
             // Configurable Red Screen Duration (Default 5s) & Debrief Toggle
             var duration = <?= (int)($redScreenDuration ?? 5) ?>;
@@ -890,8 +866,8 @@
             // Transition after duration
             setTimeout(function() {
                 clearInterval(timerInterval);
-                if (showDebrief) {
-                    hackedScare.style.display = 'none';
+                if (showDebrief && phishingTest) {
+                    if (hackedScare) hackedScare.style.display = 'none';
                     phishingTest.style.display = 'flex';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {
@@ -909,8 +885,14 @@
         }
 
         function acknowledgeTest() {
-            alert('Simulation acknowledged. You can safely close this browser window.');
-            try { window.close(); } catch(e) {}
+            customAlert({
+                title: 'Simulation Acknowledged',
+                message: 'Thank you for reviewing the security drill flags. You may safely close this browser window.',
+                type: 'success',
+                btnText: 'Close Window'
+            }).then(function() {
+                try { window.close(); } catch(e) {}
+            });
         }
 
         <?php if (empty($hasForm) || !empty($showAlert)): ?>
@@ -919,5 +901,6 @@
         });
         <?php endif; ?>
     </script>
+    <script src="<?= base_url('assets/dialogs.js') ?>"></script>
 </body>
 </html>

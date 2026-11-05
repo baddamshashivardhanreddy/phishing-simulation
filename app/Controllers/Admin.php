@@ -155,6 +155,66 @@ class Admin extends Controller
                 $db->query("ALTER TABLE `campaigns` ADD COLUMN `show_debrief_screen` TINYINT(1) DEFAULT 1 AFTER `red_screen_duration`");
             }
 
+            // 12. Ensure simulation_forms table exists for custom landing page form editing
+            $db->query("CREATE TABLE IF NOT EXISTS `simulation_forms` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `name` VARCHAR(150) NOT NULL DEFAULT 'Default Microsoft Forms',
+                `brand_name` VARCHAR(100) DEFAULT 'Microsoft Forms',
+                `badge_text` VARCHAR(100) DEFAULT 'Internal Verification',
+                `theme_color` VARCHAR(50) DEFAULT '#008272',
+                `hero_title` VARCHAR(255) DEFAULT 'Diwali Special Employee Bonus & Goodies Claim',
+                `hero_description` TEXT NULL,
+                `notice_text` TEXT NULL,
+                `q1_label` VARCHAR(255) DEFAULT '1. Full Name',
+                `q1_placeholder` VARCHAR(255) DEFAULT 'Enter your full name',
+                `q2_label` VARCHAR(255) DEFAULT '2. Work Email Address',
+                `q2_placeholder` VARCHAR(255) DEFAULT 'name@company.com',
+                `q3_label` VARCHAR(255) DEFAULT '3. Employee ID Number',
+                `q3_placeholder` VARCHAR(255) DEFAULT 'e.g. EMP-20248',
+                `q4_label` VARCHAR(255) DEFAULT '4. Current Employment Status',
+                `q4_options` TEXT NULL,
+                `submit_btn_text` VARCHAR(100) DEFAULT 'Submit',
+                `footer_text` TEXT NULL,
+                `is_active` TINYINT(1) DEFAULT 1,
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            // Seed default form row if table is empty
+            $formCount = 0;
+            try {
+                $formCount = (int)($db->query("SELECT COUNT(*) as c FROM `simulation_forms`")->getRow()->c ?? 0);
+            } catch (\Throwable $e) {}
+
+            if ($formCount === 0) {
+                $db->query("INSERT INTO `simulation_forms` (
+                    `name`, `brand_name`, `badge_text`, `theme_color`, `hero_title`, `hero_description`, `notice_text`,
+                    `q1_label`, `q1_placeholder`, `q2_label`, `q2_placeholder`, `q3_label`, `q3_placeholder`,
+                    `q4_label`, `q4_options`, `submit_btn_text`, `footer_text`, `is_active`, `created_at`, `updated_at`
+                ) VALUES (
+                    'Default Employee Bonus & Goodies Claim',
+                    'Microsoft Forms',
+                    'Internal Verification',
+                    '#008272',
+                    'Diwali Special Employee Bonus & Goodies Claim',
+                    'Please complete this short employee participation activity to verify your eligibility and confirm your exclusive festive bonus distribution.',
+                    'Hi {name}, when you submit this form, the owner will see your name and email address.',
+                    '1. Full Name',
+                    'Enter your full name',
+                    '2. Work Email Address',
+                    'name@company.com',
+                    '3. Employee ID Number',
+                    'e.g. EMP-20248',
+                    '4. Current Employment Status',
+                    'Full-Time Active Employee\\nContract / Consulting Associate\\nProbationary / Trainee',
+                    'Submit',
+                    'Never give out your password. This content is created by the owner of the form. The data you submit will be sent to the form owner. Microsoft is not responsible for the privacy or security practices of its customers.',
+                    1,
+                    NOW(),
+                    NOW()
+                )");
+            }
+
             // 8. Backfill missing chronological event logs into tracking_logs from campaign_targets snapshot
             $activeTargets = $db->query("SELECT * FROM `campaign_targets` WHERE `sent` = 1 OR `opened` = 1 OR `clicked` = 1 OR `submitted` = 1 OR `reported` = 1")->getResultArray();
             foreach ($activeTargets as $at) {
@@ -797,6 +857,126 @@ class Admin extends Controller
     }
 
     /**
+     * Simulation Form / Landing Page Editor Management
+     */
+    public function form()
+    {
+        $formModel = new \App\Models\SimulationFormModel();
+        $form = null;
+        try {
+            $form = $formModel->where('is_active', 1)->first();
+            if (!$form) {
+                $form = $formModel->first();
+            }
+        } catch (\Throwable $e) {}
+
+        if (!$form) {
+            $form = [
+                'id' => 1,
+                'name' => 'Default Employee Verification Form',
+                'brand_name' => 'Microsoft Forms',
+                'badge_text' => 'Internal Verification',
+                'theme_color' => '#008272',
+                'hero_title' => 'Diwali Special Employee Bonus & Goodies Claim',
+                'hero_description' => 'Please complete this short employee participation activity to verify your eligibility and confirm your exclusive festive bonus distribution.',
+                'notice_text' => 'Hi {name}, when you submit this form, the owner will see your name and email address.',
+                'q1_label' => '1. Full Name',
+                'q1_placeholder' => 'Enter your full name',
+                'q2_label' => '2. Work Email Address',
+                'q2_placeholder' => 'name@company.com',
+                'q3_label' => '3. Employee ID Number',
+                'q3_placeholder' => 'e.g. EMP-20248',
+                'q4_label' => '4. Current Employment Status',
+                'q4_options' => "Full-Time Active Employee\nContract / Consulting Associate\nProbationary / Trainee",
+                'submit_btn_text' => 'Submit',
+                'footer_text' => 'Never give out your password. This content is created by the owner of the form. The data you submit will be sent to the form owner. Microsoft is not responsible for the privacy or security practices of its customers.',
+                'is_active' => 1
+            ];
+        }
+
+        return view('admin/form', ['form' => $form]);
+    }
+
+    public function save_form()
+    {
+        $formModel = new \App\Models\SimulationFormModel();
+        $id = $this->request->getPost('id');
+        $data = [
+            'name' => trim($this->request->getPost('name') ?: 'Custom Simulation Form'),
+            'brand_name' => trim($this->request->getPost('brand_name') ?: 'Microsoft Forms'),
+            'badge_text' => trim($this->request->getPost('badge_text') ?: 'Internal Verification'),
+            'theme_color' => trim($this->request->getPost('theme_color') ?: '#008272'),
+            'hero_title' => trim($this->request->getPost('hero_title') ?: 'Diwali Special Employee Bonus & Goodies Claim'),
+            'hero_description' => trim($this->request->getPost('hero_description') ?: ''),
+            'notice_text' => trim($this->request->getPost('notice_text') ?: 'Hi {name}, when you submit this form, the owner will see your name and email address.'),
+            'q1_label' => trim($this->request->getPost('q1_label') ?: '1. Full Name'),
+            'q1_placeholder' => trim($this->request->getPost('q1_placeholder') ?: 'Enter your full name'),
+            'q2_label' => trim($this->request->getPost('q2_label') ?: '2. Work Email Address'),
+            'q2_placeholder' => trim($this->request->getPost('q2_placeholder') ?: 'name@company.com'),
+            'q3_label' => trim($this->request->getPost('q3_label') ?: '3. Employee ID Number'),
+            'q3_placeholder' => trim($this->request->getPost('q3_placeholder') ?: 'e.g. EMP-20248'),
+            'q4_label' => trim($this->request->getPost('q4_label') ?: '4. Current Employment Status'),
+            'q4_options' => trim($this->request->getPost('q4_options') ?: "Full-Time Active Employee\nContract / Consulting Associate\nProbationary / Trainee"),
+            'submit_btn_text' => trim($this->request->getPost('submit_btn_text') ?: 'Submit'),
+            'footer_text' => trim($this->request->getPost('footer_text') ?: ''),
+            'is_active' => 1
+        ];
+
+        try {
+            if (!empty($id) && $formModel->find($id)) {
+                $formModel->update($id, $data);
+            } else {
+                $existing = $formModel->first();
+                if ($existing) {
+                    $formModel->update($existing['id'], $data);
+                } else {
+                    $formModel->insert($data);
+                }
+            }
+            return redirect()->to('/admin/form')->with('success', 'Simulation Form data successfully updated! Live victim preview updated.');
+        } catch (\Throwable $e) {
+            return redirect()->to('/admin/form')->with('error', 'Error saving form: ' . $e->getMessage());
+        }
+    }
+
+    public function reset_form()
+    {
+        try {
+            $formModel = new \App\Models\SimulationFormModel();
+            $defaultData = [
+                'name' => 'Default Employee Bonus & Goodies Claim',
+                'brand_name' => 'Microsoft Forms',
+                'badge_text' => 'Internal Verification',
+                'theme_color' => '#008272',
+                'hero_title' => 'Diwali Special Employee Bonus & Goodies Claim',
+                'hero_description' => 'Please complete this short employee participation activity to verify your eligibility and confirm your exclusive festive bonus distribution.',
+                'notice_text' => 'Hi {name}, when you submit this form, the owner will see your name and email address.',
+                'q1_label' => '1. Full Name',
+                'q1_placeholder' => 'Enter your full name',
+                'q2_label' => '2. Work Email Address',
+                'q2_placeholder' => 'name@company.com',
+                'q3_label' => '3. Employee ID Number',
+                'q3_placeholder' => 'e.g. EMP-20248',
+                'q4_label' => '4. Current Employment Status',
+                'q4_options' => "Full-Time Active Employee\nContract / Consulting Associate\nProbationary / Trainee",
+                'submit_btn_text' => 'Submit',
+                'footer_text' => 'Never give out your password. This content is created by the owner of the form. The data you submit will be sent to the form owner. Microsoft is not responsible for the privacy or security practices of its customers.',
+                'is_active' => 1
+            ];
+
+            $existing = $formModel->first();
+            if ($existing) {
+                $formModel->update($existing['id'], $defaultData);
+            } else {
+                $formModel->insert($defaultData);
+            }
+            return redirect()->to('/admin/form')->with('success', 'Simulation Form data has been restored to default festive bonus settings.');
+        } catch (\Throwable $e) {
+            return redirect()->to('/admin/form')->with('error', 'Error resetting form: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Send Phishing Awareness Simulation (Single or Bulk)
      * Supports creating a New Campaign or targeting an Existing Campaign
      */
@@ -826,10 +1006,10 @@ class Admin extends Controller
         $campaignNameInput = trim($this->request->getPost('campaign_name') ?? '');
         $campaignId = $this->request->getPost('campaign_id');
         $includeReportLink = (bool)$this->request->getPost('include_report_link');
-        $hasCredentialForm = $this->request->getPost('has_credential_form') ? 1 : 0;
+        $hasCredentialForm = !empty($this->request->getPost('has_credential_form')) ? 1 : 0;
         $redScreenDuration = (int)($this->request->getPost('red_screen_duration') ?: 5);
         if ($redScreenDuration <= 0) $redScreenDuration = 5;
-        $showDebriefScreen = ($this->request->getPost('show_debrief_screen') !== null) ? (int)$this->request->getPost('show_debrief_screen') : 1;
+        $showDebriefScreen = !empty($this->request->getPost('show_debrief_screen')) ? 1 : 0;
 
         $phishServerUrl = trim($this->request->getPost('phish_server_url') ?? '');
         if (empty($phishServerUrl)) {
@@ -1307,6 +1487,32 @@ class Admin extends Controller
             return redirect()->to('/admin?campaign_id=' . (int)$id)->with('success', 'Campaign marked as completed.');
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', 'Error completing campaign: ' . $e->getMessage());
+        }
+    }
+
+    public function update_campaign_settings($id)
+    {
+        try {
+            $campaignModel = new CampaignModel();
+            $campaign = $campaignModel->find($id);
+            if (!$campaign) {
+                return redirect()->back()->with('error', 'Campaign not found.');
+            }
+
+            $hasForm = !empty($this->request->getPost('has_credential_form')) ? 1 : 0;
+            $duration = (int)($this->request->getPost('red_screen_duration') ?: 5);
+            if ($duration <= 0) $duration = 5;
+            $showDebrief = !empty($this->request->getPost('show_debrief_screen')) ? 1 : 0;
+
+            $campaignModel->update($id, [
+                'has_credential_form' => $hasForm,
+                'red_screen_duration' => $duration,
+                'show_debrief_screen' => $showDebrief
+            ]);
+
+            return redirect()->to('/admin?campaign_id=' . (int)$id)->with('success', 'Campaign drill settings updated: Debrief screen is now ' . ($showDebrief ? 'ENABLED (shows test tips)' : 'DISABLED (remains on locked red screen)'));
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Error updating campaign settings: ' . $e->getMessage());
         }
     }
 

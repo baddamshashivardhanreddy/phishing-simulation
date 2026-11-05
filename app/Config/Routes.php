@@ -53,6 +53,7 @@ $routes->get('admin', 'Admin::index');
 $routes->get('admin/campaigns', 'Admin::campaigns');
 $routes->get('admin/campaigns/view/(:num)', 'Admin::view_campaign/$1');
 $routes->get('admin/campaigns/complete/(:num)', 'Admin::complete_campaign/$1');
+$routes->post('admin/campaigns/update_settings/(:num)', 'Admin::update_campaign_settings/$1');
 $routes->get('admin/campaigns/delete/(:num)', 'Admin::delete_campaign/$1');
 $routes->get('admin/export', 'Admin::export');
 $routes->post('admin/send', 'Admin::send_simulation');
@@ -76,6 +77,11 @@ $routes->get('admin/templates', 'Admin::templates');
 $routes->post('admin/save_template', 'Admin::save_template');
 $routes->get('admin/delete_template/(:num)', 'Admin::delete_template/$1');
 $routes->get('admin/template_preview/(:num)', 'Admin::template_preview/$1');
+
+// Simulation Landing Form Editor
+$routes->get('admin/form', 'Admin::form');
+$routes->post('admin/form/save', 'Admin::save_form');
+$routes->post('admin/form/reset', 'Admin::reset_form');
 
 // Admin Users Management & Profile
 $routes->get('admin/profile', 'Admin::profile');
