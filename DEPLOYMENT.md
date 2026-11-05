@@ -179,7 +179,7 @@ sudo certbot certonly --standalone -d admin.yourcompany.com -d rewards.yourcompa
 
 2. Default administrator credentials:
    - **Username**: `admin`
-   - **Password**: `password123` *(Change immediately in **Admin Users**)*
+   - **Password**: `admin` *(Change immediately in **Admin Users** (`/admin/profile`))*
 
 3. Navigate to **Settings**:
    - Verify **Admin Server URL** and **Phishing Server URL**.

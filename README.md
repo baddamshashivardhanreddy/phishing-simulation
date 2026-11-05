@@ -115,7 +115,8 @@ The application is now running with Nginx and PHP 8.2-FPM on ports 80 and 443!
 4. Copy `.env.example` to `.env` and verify database settings.
 5. Open your browser:
    * **Admin Login**: `http://localhost/phishing-simulation/login`
-   * **Default Admin**: Username: `admin` | Password: `password123`
+   * **Default Admin Credentials**: Username: `admin` | Password: `admin`
+   * *(Note: It is strongly recommended to change this default password immediately after first login via **Admin Users** (`/admin/profile`)).*
 
 ---
 
