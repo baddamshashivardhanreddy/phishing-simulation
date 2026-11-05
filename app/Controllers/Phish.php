@@ -255,11 +255,26 @@ class Phish extends Controller
             $submittedPayload = json_decode($target['submitted_data_payload'], true);
         }
 
+        $campaign = null;
+        if ($campaignId) {
+            $campaignModel = new CampaignModel();
+            $campaign = $campaignModel->find($campaignId);
+        }
+
+        // Form is optional, by default keep the red screen (hasForm = false)
+        $hasForm = !empty($campaign['has_credential_form']);
+        $redScreenDuration = (int)($campaign['red_screen_duration'] ?? 5);
+        if ($redScreenDuration <= 0) $redScreenDuration = 5;
+        $showDebrief = !isset($campaign['show_debrief_screen']) || !empty($campaign['show_debrief_screen']);
+
         return view('training', [
             'email' => $email,
             'campaignId' => $campaignId,
             'target' => $target,
             'submittedPayload' => $submittedPayload,
+            'hasForm' => $hasForm,
+            'redScreenDuration' => $redScreenDuration,
+            'showDebrief' => $showDebrief,
             'showAlert' => (bool)$this->request->getGet('alert')
         ]);
     }
@@ -346,5 +361,29 @@ class Phish extends Controller
     public function lockscreen()
     {
         return view('lockscreen');
+    }
+
+    // Serve icon.svg / favicon
+    public function favicon()
+    {
+        $svgPath = FCPATH . 'icon.svg';
+        if (file_exists($svgPath)) {
+            return $this->response
+                ->setStatusCode(200)
+                ->setHeader('Content-Type', 'image/svg+xml')
+                ->setHeader('Cache-Control', 'public, max-age=604800')
+                ->setBody(file_get_contents($svgPath));
+        }
+
+        $icoPath = FCPATH . 'favicon.ico';
+        if (file_exists($icoPath)) {
+            return $this->response
+                ->setStatusCode(200)
+                ->setHeader('Content-Type', 'image/x-icon')
+                ->setHeader('Cache-Control', 'public, max-age=604800')
+                ->setBody(file_get_contents($icoPath));
+        }
+
+        return $this->response->setStatusCode(404);
     }
 }

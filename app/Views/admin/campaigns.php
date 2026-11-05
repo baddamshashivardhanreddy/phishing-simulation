@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhishGuard - Campaigns Management</title>
+    <link rel="icon" type="image/svg+xml" href="<?= base_url('icon.svg') ?>">
+    <link rel="alternate icon" href="<?= base_url('favicon.ico') ?>">
     <!-- Custom CSS -->
     <link href="<?= base_url('assets/admin.css') ?>" rel="stylesheet">
     <!-- Ionicons -->
@@ -343,6 +345,58 @@
                         </label>
                     </div>
 
+                    <!-- SECTION 4: LANDING PAGE & RED ALERT EXPERIENCE -->
+                    <div class="modal-section" style="margin-bottom: 0; margin-top: 1.15rem;">
+                        <div class="modal-section-title">
+                            <ion-icon name="color-wand-outline"></ion-icon> 4. Landing Page & Red Alert Experience
+                        </div>
+
+                        <!-- Toggle 1: Microsoft Forms Credential Input (Optional, default OFF) -->
+                        <label class="toggle-switch-card" style="margin-top: 0; margin-bottom: 12px;">
+                            <div class="toggle-switch-text">
+                                <strong>Require Microsoft Forms Data Submission</strong>
+                                <small><strong>Default OFF:</strong> Targets immediately experience the blinking Red Alert screen upon clicking the email link.<br>
+                                <em>Turn ON if you want targets to submit personal/employee details into a Microsoft Forms page first.</em></small>
+                            </div>
+                            <div class="switch-control">
+                                <input type="checkbox" name="has_credential_form" value="1" id="hasCredentialFormCheck">
+                                <span class="switch-slider"></span>
+                            </div>
+                        </label>
+
+                        <!-- Red Screen Duration Input & Preset Chips -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <label style="font-size: 0.84rem; font-weight: 700; color: #1e293b; margin: 0;">
+                                    ⏱️ Red Screen Alert Duration
+                                </label>
+                                <div style="display: flex; gap: 6px;">
+                                    <button type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 0.75rem;" onclick="setRedScreenDuration(3)">3s</button>
+                                    <button type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 0.75rem;" onclick="setRedScreenDuration(5)">5s</button>
+                                    <button type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 0.75rem;" onclick="setRedScreenDuration(8)">8s</button>
+                                    <button type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 0.75rem;" onclick="setRedScreenDuration(10)">10s</button>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="number" name="red_screen_duration" id="redScreenDurationInput" value="5" min="1" max="60" class="form-control" style="width: 90px; font-size: 0.95rem; text-align: center; font-weight: 700;">
+                                <span style="font-size: 0.82rem; color: #64748b;">seconds of blinking "YOU HAVE BEEN HACKED!" alert</span>
+                            </div>
+                        </div>
+
+                        <!-- Toggle 2: Show Debrief Screen After Red Alert (Default ON) -->
+                        <label class="toggle-switch-card" style="margin-top: 0; margin-bottom: 0;">
+                            <div class="toggle-switch-text">
+                                <strong>Display "THIS WAS A PHISHING TEST" Debrief Screen</strong>
+                                <small><strong>Default ON:</strong> Smoothly transitions to the educational debrief with security tips after the countdown.<br>
+                                <em>Turn OFF if you want the screen to remain locked without revealing that it was a test drill.</em></small>
+                            </div>
+                            <div class="switch-control">
+                                <input type="checkbox" name="show_debrief_screen" value="1" id="showDebriefCheck" checked>
+                                <span class="switch-slider"></span>
+                            </div>
+                        </label>
+                    </div>
+
                 </div>
 
                 <div class="modal-footer" style="padding: 1.1rem 1.75rem;">
@@ -365,6 +419,11 @@
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('show');
+        }
+
+        function setRedScreenDuration(sec) {
+            const input = document.getElementById('redScreenDurationInput');
+            if (input) input.value = sec;
         }
 
         // Segmented Campaign Type Switcher

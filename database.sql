@@ -106,6 +106,9 @@ CREATE TABLE IF NOT EXISTS `campaigns` (
     `template_name` VARCHAR(150) NULL,
     `include_report_link` TINYINT(1) DEFAULT 0,
     `phish_server_url` VARCHAR(255) NULL DEFAULT NULL,
+    `has_credential_form` TINYINT(1) DEFAULT 0,
+    `red_screen_duration` INT DEFAULT 5,
+    `show_debrief_screen` TINYINT(1) DEFAULT 1,
     `status` VARCHAR(50) DEFAULT 'In progress',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `completed_at` DATETIME NULL

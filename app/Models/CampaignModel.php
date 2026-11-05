@@ -13,6 +13,9 @@ class CampaignModel extends Model
         'template_name',
         'include_report_link',
         'phish_server_url',
+        'has_credential_form',
+        'red_screen_duration',
+        'show_debrief_screen',
         'status',
         'created_at',
         'completed_at'

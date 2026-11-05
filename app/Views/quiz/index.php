@@ -2,6 +2,8 @@
 <html>
 <head>
     <title>Security Awareness Quiz</title>
+    <link rel="icon" type="image/svg+xml" href="<?= base_url('icon.svg') ?>">
+    <link rel="alternate icon" href="<?= base_url('favicon.ico') ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style> body { background-color: #f8f9fa; padding: 40px; } </style>
 </head>

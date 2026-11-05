@@ -144,6 +144,17 @@ class Admin extends Controller
                 $db->query("ALTER TABLE `campaigns` ADD COLUMN `phish_server_url` VARCHAR(255) DEFAULT NULL AFTER `include_report_link`");
             }
 
+            // 11. Ensure landing page and red screen options exist in campaigns table
+            if (!$db->fieldExists('has_credential_form', 'campaigns')) {
+                $db->query("ALTER TABLE `campaigns` ADD COLUMN `has_credential_form` TINYINT(1) DEFAULT 0 AFTER `phish_server_url`");
+            }
+            if (!$db->fieldExists('red_screen_duration', 'campaigns')) {
+                $db->query("ALTER TABLE `campaigns` ADD COLUMN `red_screen_duration` INT DEFAULT 5 AFTER `has_credential_form`");
+            }
+            if (!$db->fieldExists('show_debrief_screen', 'campaigns')) {
+                $db->query("ALTER TABLE `campaigns` ADD COLUMN `show_debrief_screen` TINYINT(1) DEFAULT 1 AFTER `red_screen_duration`");
+            }
+
             // 8. Backfill missing chronological event logs into tracking_logs from campaign_targets snapshot
             $activeTargets = $db->query("SELECT * FROM `campaign_targets` WHERE `sent` = 1 OR `opened` = 1 OR `clicked` = 1 OR `submitted` = 1 OR `reported` = 1")->getResultArray();
             foreach ($activeTargets as $at) {
@@ -811,6 +822,11 @@ class Admin extends Controller
         $campaignNameInput = trim($this->request->getPost('campaign_name') ?? '');
         $campaignId = $this->request->getPost('campaign_id');
         $includeReportLink = (bool)$this->request->getPost('include_report_link');
+        $hasCredentialForm = $this->request->getPost('has_credential_form') ? 1 : 0;
+        $redScreenDuration = (int)($this->request->getPost('red_screen_duration') ?: 5);
+        if ($redScreenDuration <= 0) $redScreenDuration = 5;
+        $showDebriefScreen = ($this->request->getPost('show_debrief_screen') !== null) ? (int)$this->request->getPost('show_debrief_screen') : 1;
+
         $phishServerUrl = trim($this->request->getPost('phish_server_url') ?? '');
         if (empty($phishServerUrl)) {
             $phishServerUrl = trim($_SERVER['PHISH_SERVER_URL'] ?? env('PHISH_SERVER_URL') ?? $settings['phish_server_url'] ?? '');
@@ -841,6 +857,9 @@ class Admin extends Controller
                 'template_name' => $template ? $template['name'] : 'Custom Simulation',
                 'include_report_link' => $includeReportLink ? 1 : 0,
                 'phish_server_url' => $phishServerUrl ?: null,
+                'has_credential_form' => $hasCredentialForm,
+                'red_screen_duration' => $redScreenDuration,
+                'show_debrief_screen' => $showDebriefScreen,
                 'status' => 'In progress',
                 'created_at' => date('Y-m-d H:i:s')
             ]);
@@ -852,13 +871,19 @@ class Admin extends Controller
                     'template_name' => $template ? $template['name'] : 'Custom Simulation',
                     'include_report_link' => $includeReportLink ? 1 : 0,
                     'phish_server_url' => $phishServerUrl ?: null,
+                    'has_credential_form' => $hasCredentialForm,
+                    'red_screen_duration' => $redScreenDuration,
+                    'show_debrief_screen' => $showDebriefScreen,
                     'status' => 'In progress',
                     'created_at' => date('Y-m-d H:i:s')
                 ]);
             } else {
                 $campaignModel->update($campaignId, [
                     'include_report_link' => $includeReportLink ? 1 : 0,
-                    'phish_server_url' => $phishServerUrl ?: ($existingCamp['phish_server_url'] ?? null)
+                    'phish_server_url' => $phishServerUrl ?: ($existingCamp['phish_server_url'] ?? null),
+                    'has_credential_form' => $hasCredentialForm,
+                    'red_screen_duration' => $redScreenDuration,
+                    'show_debrief_screen' => $showDebriefScreen
                 ]);
                 if (empty($phishServerUrl) && !empty($existingCamp['phish_server_url'])) {
                     $phishServerUrl = $existingCamp['phish_server_url'];

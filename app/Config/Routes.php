@@ -8,6 +8,11 @@ use CodeIgniter\Router\RouteCollection;
 
 $routes->get('/', 'Admin::index');
 
+// Favicon & Icon Routes
+$routes->get('icon.svg', 'Phish::favicon');
+$routes->get('favicon.svg', 'Phish::favicon');
+$routes->get('favicon.ico', 'Phish::favicon');
+
 // Auth Routes
 $routes->match(['get', 'post'], 'login', 'Auth::login');
 $routes->get('logout', 'Auth::logout');

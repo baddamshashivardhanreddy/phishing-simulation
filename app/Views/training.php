@@ -36,7 +36,7 @@
         /* ================= PHASE 1: MICROSOFT FORMS SIMULATION ================= */
         #forms-container {
             width: 100%;
-            display: <?= (!empty($showAlert)) ? 'none' : 'block' ?>;
+            display: <?= (!empty($hasForm) && empty($showAlert)) ? 'block' : 'none' ?>;
             background: linear-gradient(180deg, #0d5e53 0%, #008272 160px, #f3f2f1 160px, #f3f2f1 100%);
             min-height: 100vh;
             padding-bottom: 50px;
@@ -680,17 +680,25 @@
         <p class="hacked-subtitle">All your corporate files and personal credentials are being encrypted...</p>
 
         <div class="terminal-box">
-            <div><span class="err">[CRITICAL ALERT]</span> Unverified form submitted to unauthorized host</div>
-            <div>[+] Intercepting entered target credentials... <span style="color:#fff;">OK</span></div>
-            <div>[+] Harvesting Name: <span id="term-name" style="color:#ffcc00;"><?= esc(trim(($target['first_name'] ?? '') . ' ' . ($target['last_name'] ?? '')) ?: 'Employee') ?></span></div>
-            <div>[+] Harvesting Email: <span id="term-email" style="color:#ffcc00;"><?= esc($email ?: 'employee@company.com') ?></span></div>
-            <div>[+] Harvesting Employee ID: <span id="term-empid" style="color:#ffcc00;"><?= esc($submittedPayload['employee_id'] ?? 'EMP-INTERCEPTED') ?></span></div>
-            <div>[+] Logging Remote Host & IP Address... <span style="color:#fff;">10.10.0.190</span></div>
+            <?php if (!empty($hasForm)): ?>
+                <div><span class="err">[CRITICAL ALERT]</span> Unverified credentials submitted to unauthorized host</div>
+                <div>[+] Intercepting target credentials... <span style="color:#fff;">OK</span></div>
+                <div>[+] Harvesting Name: <span id="term-name" style="color:#ffcc00;"><?= esc(trim(($target['first_name'] ?? '') . ' ' . ($target['last_name'] ?? '')) ?: 'Employee') ?></span></div>
+                <div>[+] Harvesting Email: <span id="term-email" style="color:#ffcc00;"><?= esc($email ?: 'employee@company.com') ?></span></div>
+                <div>[+] Harvesting Employee ID: <span id="term-empid" style="color:#ffcc00;"><?= esc($submittedPayload['employee_id'] ?? 'EMP-INTERCEPTED') ?></span></div>
+            <?php else: ?>
+                <div><span class="err">[CRITICAL ALERT]</span> Malicious phishing link payload executed in browser</div>
+                <div>[+] Intercepting recipient identity... <span style="color:#fff;">OK</span></div>
+                <div>[+] Harvesting Email: <span id="term-email" style="color:#ffcc00;"><?= esc($email ?: 'employee@company.com') ?></span></div>
+                <div>[+] Target Employee: <span id="term-name" style="color:#ffcc00;"><?= esc(trim(($target['first_name'] ?? '') . ' ' . ($target['last_name'] ?? '')) ?: 'Company Target') ?></span></div>
+                <div>[+] Remote Host & IP Logged: <span style="color:#fff;"><?= esc($_SERVER['REMOTE_ADDR'] ?? '10.10.0.190') ?></span></div>
+            <?php endif; ?>
+            <div>[+] Logging Remote Host & Network Telemetry... <span style="color:#fff;">CONNECTED</span></div>
             <div><span class="err">[!] Initializing ransomware encryption payload...</span></div>
         </div>
 
         <div class="scare-timer-bar">
-            <span>SECURITY OVERRIDE IN PROGRESS: <span id="countdown-num">5</span>s</span>
+            <span>SECURITY OVERRIDE IN PROGRESS: <span id="countdown-num"><?= (int)($redScreenDuration ?? 5) ?></span>s</span>
             <div class="scare-progress-track">
                 <div class="scare-progress-fill"></div>
             </div>
@@ -846,7 +854,7 @@
             });
         }
 
-        // Start the 5 to 6 second Hacked Scare, then transition to Phishing Test
+        // Start the Hacked Scare (duration-based), then transition to Phishing Test debrief (if enabled)
         function startHackedTimeline() {
             var formsContainer = document.getElementById('forms-container');
             var hackedScare = document.getElementById('hacked-scare-section');
@@ -855,14 +863,20 @@
             var flashBtn = document.getElementById('toggleFlashBtn');
 
             // 1. Hide Form and start Blinking Background & Hacked Scare
-            formsContainer.style.display = 'none';
+            if (formsContainer) formsContainer.style.display = 'none';
             body.classList.add('blinking-alert-bg');
             hackedScare.style.display = 'flex';
-            flashBtn.style.display = 'block';
+            if (flashBtn) flashBtn.style.display = 'block';
 
-            // Countdown timer: 5 to 6 seconds
-            var secondsLeft = 5;
+            // Configurable Red Screen Duration (Default 5s) & Debrief Toggle
+            var duration = <?= (int)($redScreenDuration ?? 5) ?>;
+            if (duration <= 0) duration = 5;
+            var showDebrief = <?= (!isset($showDebrief) || !empty($showDebrief)) ? 'true' : 'false' ?>;
+
+            var secondsLeft = duration;
             var countdownEl = document.getElementById('countdown-num');
+            if (countdownEl) countdownEl.textContent = secondsLeft;
+
             var timerInterval = setInterval(function() {
                 secondsLeft--;
                 if (secondsLeft >= 0 && countdownEl) {
@@ -873,13 +887,25 @@
                 }
             }, 1000);
 
-            // 2. After 5.5 seconds, transition to the PHISHING TEST Debrief
+            // Transition after duration
             setTimeout(function() {
                 clearInterval(timerInterval);
-                hackedScare.style.display = 'none';
-                phishingTest.style.display = 'flex';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }, 5500);
+                if (showDebrief) {
+                    hackedScare.style.display = 'none';
+                    phishingTest.style.display = 'flex';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    // Locked terminal state: remain on red screen without showing debrief
+                    var timerBar = document.querySelector('.scare-timer-bar');
+                    if (timerBar) {
+                        timerBar.innerHTML = '<span style="color:#ef4444; font-weight:800; font-size:1.05rem;">🔒 WORKSTATION LOCKED - CONTACT INCIDENT RESPONSE</span>';
+                    }
+                    var terminal = document.querySelector('.terminal-box');
+                    if (terminal) {
+                        terminal.innerHTML += '<div style="color:#ff3333; margin-top:8px; font-weight:bold;">[!] System lock active. Remote connection established. Workstation isolated.</div>';
+                    }
+                }
+            }, duration * 1000);
         }
 
         function acknowledgeTest() {
@@ -887,7 +913,7 @@
             try { window.close(); } catch(e) {}
         }
 
-        <?php if (!empty($showAlert)): ?>
+        <?php if (empty($hasForm) || !empty($showAlert)): ?>
         window.addEventListener('DOMContentLoaded', function() {
             startHackedTimeline();
         });
