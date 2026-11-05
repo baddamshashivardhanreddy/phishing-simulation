@@ -1,0 +1,10 @@
+{
+    "smtp_host": "smtp.gmail.com",
+    "smtp_user": "nobitanobi0272@gmail.com",
+    "smtp_pass": "bbajqzhbaclrzbux",
+    "smtp_port": 587,
+    "smtp_crypto": "tls",
+    "brevo_api_key": "",
+    "from_email": "nobitanobi0272@gmail.com",
+    "from_name": "Ravindranath Yarlagadda"
+}

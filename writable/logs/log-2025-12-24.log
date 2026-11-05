@@ -1,0 +1,256 @@
+ERROR - 2025-12-24 05:53:04 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2025-12-24 05:53:04 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+
+hello: 250-Hello 10.10.0.170
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH LOGIN CRAM-MD5 PLAIN
+250 SIZE 20971520
+
+starttls: 220 2.0.0 Ready to start TLS
+
+hello: 250-Hello 10.10.0.170
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+
+ERROR - 2025-12-24 05:53:52 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2025-12-24 05:53:52 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+
+hello: 250-Hello 10.10.0.170
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+starttls: 220 2.0.0 Ready to start TLS
+
+hello: 250-Hello 10.10.0.170
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+
+ERROR - 2025-12-24 05:57:02 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2025-12-24 05:57:02 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+
+hello: 250-Hello 10.10.0.170
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+starttls: 220 2.0.0 Ready to start TLS
+
+hello: 250-Hello 10.10.0.170
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+
+ERROR - 2025-12-24 06:38:00 --> Brevo API Send Failed: {"message":"Unable to send email. Your SMTP account is not yet activated. Please contact us at contact@brevo.com to request activation","code":"permission_denied"}
+
+ERROR - 2025-12-24 06:38:01 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2025-12-24 06:38:01 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+
+hello: 250-Hello 10.10.0.170
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+starttls: 220 2.0.0 Ready to start TLS
+
+hello: 250-Hello 10.10.0.170
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+
+ERROR - 2025-12-24 06:52:09 --> Brevo API Failed: {"message":"Unable to send email. Your SMTP account is not yet activated. Please contact us at contact@brevo.com to request activation","code":"permission_denied"}
+
+ERROR - 2025-12-24 06:52:10 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2025-12-24 06:52:10 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+
+hello: 250-Hello 10.10.0.170
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+starttls: 220 2.0.0 Ready to start TLS
+
+hello: 250-Hello 10.10.0.170
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+
+ERROR - 2025-12-24 07:31:49 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2025-12-24 07:31:49 --> 220 smtp.elasticemail.com ESMTP
+
+hello: 250-smtp.elasticemail.com
+250-PIPELINING
+250-SIZE 20971520
+250-8BITMIME
+250-AUTH=PLAIN LOGIN CRAM-MD5
+250-AUTH PLAIN LOGIN CRAM-MD5
+250-STARTTLS
+250 OK
+
+starttls: 220 Begin TLS negotiation
+
+hello: 250-smtp.elasticemail.com
+250-PIPELINING
+250-SIZE 20971520
+250-8BITMIME
+250-AUTH=PLAIN LOGIN CRAM-MD5
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 OK
+
+from: 553 Envelope FROM 'informationsecurity@viyonafintech.com' email address not allowed.
+
+The following SMTP error was encountered: 553 Envelope FROM 'informationsecurity@viyonafintech.com' email address not allowed.
+
+quit: 250 OK
+
+The following SMTP error was encountered: 250 OK
+
+ERROR - 2025-12-24 08:28:55 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2025-12-24 08:28:55 --> 220 smtp.elasticemail.com ESMTP
+
+hello: 250-smtp.elasticemail.com
+250-PIPELINING
+250-SIZE 20971520
+250-8BITMIME
+250-AUTH=PLAIN LOGIN CRAM-MD5
+250-AUTH PLAIN LOGIN CRAM-MD5
+250-STARTTLS
+250 OK
+
+starttls: 220 Begin TLS negotiation
+
+hello: 250-smtp.elasticemail.com
+250-PIPELINING
+250-SIZE 20971520
+250-8BITMIME
+250-AUTH=PLAIN LOGIN CRAM-MD5
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 OK
+
+Failed to authenticate password. Error: 535 535 Authentication failed: Access denied.
+
+ERROR - 2025-12-24 08:30:35 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2025-12-24 08:30:35 --> 220 smtp.elasticemail.com ESMTP
+
+hello: 250-smtp.elasticemail.com
+250-PIPELINING
+250-SIZE 20971520
+250-8BITMIME
+250-AUTH=PLAIN LOGIN CRAM-MD5
+250-AUTH PLAIN LOGIN CRAM-MD5
+250-STARTTLS
+250 OK
+
+starttls: 220 Begin TLS negotiation
+
+hello: 250-smtp.elasticemail.com
+250-PIPELINING
+250-SIZE 20971520
+250-8BITMIME
+250-AUTH=PLAIN LOGIN CRAM-MD5
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 OK
+
+Failed to authenticate password. Error: 535 535 Authentication failed: Access denied.
+
+ERROR - 2025-12-24 08:31:10 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2025-12-24 08:31:10 --> 220 smtp.elasticemail.com ESMTP
+
+hello: 250-smtp.elasticemail.com
+250-PIPELINING
+250-SIZE 20971520
+250-8BITMIME
+250-AUTH=PLAIN LOGIN CRAM-MD5
+250-AUTH PLAIN LOGIN CRAM-MD5
+250-STARTTLS
+250 OK
+
+starttls: 220 Begin TLS negotiation
+
+hello: 250-smtp.elasticemail.com
+250-PIPELINING
+250-SIZE 20971520
+250-8BITMIME
+250-AUTH=PLAIN LOGIN CRAM-MD5
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 OK
+
+from: 553 Envelope FROM 'informationsecurity@viyonafintech.com' email address not allowed.
+
+The following SMTP error was encountered: 553 Envelope FROM 'informationsecurity@viyonafintech.com' email address not allowed.
+
+quit: 250 OK
+
+The following SMTP error was encountered: 250 OK
+
+ERROR - 2025-12-24 08:35:40 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2025-12-24 08:35:40 --> 220 smtp.elasticemail.com ESMTP
+
+hello: 250-smtp.elasticemail.com
+250-PIPELINING
+250-SIZE 20971520
+250-8BITMIME
+250-AUTH=PLAIN LOGIN CRAM-MD5
+250-AUTH PLAIN LOGIN CRAM-MD5
+250-STARTTLS
+250 OK
+
+starttls: 220 Begin TLS negotiation
+
+hello: 250-smtp.elasticemail.com
+250-PIPELINING
+250-SIZE 20971520
+250-8BITMIME
+250-AUTH=PLAIN LOGIN CRAM-MD5
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 OK
+
+Failed to authenticate password. Error: 535 535 Authentication failed: Access denied.
+
